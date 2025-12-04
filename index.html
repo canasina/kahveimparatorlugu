@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kahve İmparatorluğu - Grand Edition</title>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:wght@300;400;600;700&family=EB+Garamond:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:wght@300;400;600;700&family=EB+Garamond:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -59,9 +59,13 @@
             <div class="book-toolbar" id="book-toolbar">
                 <button id="btn-zoom-out" class="toolbar-btn" title="Uzaklaştır">−</button>
                 <button id="btn-zoom-in" class="toolbar-btn" title="Yakınlaştır">+</button>
+                <div class="toolbar-divider"></div>
+                <button id="btn-bookmark" class="toolbar-btn bookmark-btn" title="Kitap Ayracı Ekle">⚐</button>
+                <button id="btn-goto-bookmark" class="toolbar-btn bookmark-btn goto-bookmark-btn" title="Ayraca Git" style="display: none;">⤷</button>
+                <div class="toolbar-divider"></div>
                 <button id="btn-first-page" class="toolbar-btn" title="En Başa Dön">⏮</button>
                 <button id="btn-previous" class="toolbar-btn" title="Önceki Sayfa">◀</button>
-                <input type="number" id="page-input" class="page-input" placeholder="Sayfa" min="1" max="12" title="Sayfa numarası girin">
+                <input type="text" id="page-input" class="page-input" placeholder="0-1" title="Sayfa numarası girin (örn: 0-1, 2-3, 4-5)" maxlength="7">
                 <button id="btn-next" class="toolbar-btn" title="Sonraki Sayfa">▶</button>
                 <button id="btn-last-page" class="toolbar-btn" title="En Sona Git">⏭</button>
             </div>
@@ -100,6 +104,25 @@
                     <div class="hard"><div class="page-content cover-content"><img src="./arka1.png" alt="Arka Kapak"></div></div>
 
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kaldığınız Yerden Devam Edin Modal -->
+    <div id="continue-modal" class="bookmark-modal">
+        <div class="bookmark-modal-overlay"></div>
+        <div class="bookmark-modal-content">
+            <h3 class="bookmark-modal-title">Devam Etmek İster Misiniz?</h3>
+            <p class="bookmark-modal-text" id="continue-modal-text">
+                En son <span id="continue-book-name">Köpükten Kapılar</span>'da <span id="continue-page-number">1</span>. sayfadaydınız. Kaldığınız yerden devam etmek ister misiniz?
+            </p>
+            <div class="bookmark-modal-buttons">
+                <button class="bookmark-btn bookmark-btn-primary" id="btn-continue-reading">
+                    <span>Evet, Devam Et</span>
+                </button>
+                <button class="bookmark-btn bookmark-btn-secondary" id="btn-start-from-beginning">
+                    <span>Hayır, Baştan Başla</span>
+                </button>
             </div>
         </div>
     </div>

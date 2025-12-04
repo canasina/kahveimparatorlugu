@@ -10,7 +10,9 @@ $(document).ready(function() {
     var maxZoom = 2;
     var zoomStep = 0.25;
     var totalPages = 12;
+    var jsonPages = []; // Yüklenen JSON sayfaları (pageNumber bilgisi ile)
     const STORAGE_KEY = 'bookContent';
+    const BOOKMARK_KEY = 'bookmark_book1'; // Kitap 1 için ayraç anahtarı
     const MAX_PAGES = 50; // Maksimum sayfa sayısı (sayfa1.json - sayfa50.json) - İhtiyaca göre artırılabilir
 
     // Video klasör yolları
@@ -143,6 +145,9 @@ $(document).ready(function() {
         // Mevcut soft sayfaları temizle (varsa)
         book.find('.soft').remove();
 
+        // JSON sayfalarını sakla (sayfa numarası gösterimi için)
+        jsonPages = pages;
+
         // Sayfaları ekle
         pages.forEach(function(page) {
             const pageHTML = createPageHTML(page);
@@ -246,18 +251,27 @@ $(document).ready(function() {
 
         // Event handler'ları bağla
         setupEventHandlers();
+        
+        // İlk yüklemede ayraç buton durumunu güncelle
+        updateBookmarkButtonState();
     }
 
     // Event handler'ları kur
     function setupEventHandlers() {
 
-        // Sayfa çevrildiğinde sayfa numarasını güncelle
+        // Sayfa çevrildiğinde sayfa numarasını güncelle (çift sayfa formatında)
     book.bind('turned', function(event, page) {
-        $("#page-input").val(page);
+        // Turn.js sayfa numarasını çift sayfa formatına çevir (0-1, 2-3, 4-5 gibi)
+        const pageDisplay = formatPageNumberForDisplay(page);
+        $("#page-input").val(pageDisplay);
+        updateBookmarkButtonState();
+        // Debug için console.log
+        console.log('Sayfa çevrildi - Turn.js sayfa:', page, 'Gösterilen:', pageDisplay);
     });
 
-        // İlk sayfa numarasını ayarla
-        $("#page-input").val(1);
+        // İlk sayfa numarasını ayarla (çift sayfa formatında)
+        const initialPage = book.turn("page") || 1;
+        $("#page-input").val(formatPageNumberForDisplay(initialPage));
 
         // Zoom In Butonu
         $("#btn-zoom-in").click(function() {
@@ -300,21 +314,26 @@ $(document).ready(function() {
         book.turn("page", totalPages);
     });
 
-    // Sayfa Numarası Input
+    // Sayfa Numarası Input - Çift sayfa formatını parse et
     $("#page-input").on('keypress', function(e) {
         if (e.which === 13) { // Enter tuşu
-            var pageNum = parseInt($(this).val());
-            if (pageNum >= 1 && pageNum <= totalPages) {
-                book.turn("page", pageNum);
+            var inputValue = $(this).val().trim();
+            var targetPage = parsePageNumberFromInput(inputValue);
+            
+            if (targetPage >= 1 && targetPage <= totalPages) {
+                book.turn("page", targetPage);
             } else {
-                $(this).val(book.turn("page"));
+                // Geçersiz sayfa numarası - mevcut sayfayı göster
+                const currentPage = book.turn("page");
+                $(this).val(formatPageNumberForDisplay(currentPage));
             }
         }
     });
 
-    // Input'tan çıkınca mevcut sayfayı göster
+    // Input'tan çıkınca mevcut sayfayı göster (çift sayfa formatında)
     $("#page-input").on('blur', function() {
-        $(this).val(book.turn("page"));
+        const currentPage = book.turn("page");
+        $(this).val(formatPageNumberForDisplay(currentPage));
     });
 
     // Klavye Kontrolleri
@@ -329,23 +348,75 @@ $(document).ready(function() {
 
     // Kütüphaneden Kitaba Geçiş
     $("#book-1-trigger").click(function() {
-            // Arka plan geçişi: Kütüphane videosundan statik arka plana
-            $('.library-video-bg').addClass('hidden');
-            $('#reader-bg').addClass('active');
-            
-            // Rastgele okuyucu arka plan görseli yükle
-            loadRandomReaderBackground();
-            
-            // View geçişi
+        // Ayraç kontrolü - Eğer ayraç varsa modal göster
+        const bookmark = getBookmark();
+        if (bookmark && bookmark.pageNumber) {
+            // Modal göster
+            showContinueModal(bookmark.pageNumber);
+        } else {
+            // Ayraç yoksa direkt kitabı aç
+            openBook(1);
+        }
+    });
+
+    // Kitabı aç (sayfa numarası ile)
+    function openBook(startPage) {
+        // Arka plan geçişi: Kütüphane videosundan statik arka plana
+        $('.library-video-bg').addClass('hidden');
+        $('#reader-bg').addClass('active');
+        
+        // Rastgele okuyucu arka plan görseli yükle
+        loadRandomReaderBackground();
+        
+        // View geçişi
         libraryView.removeClass("active").addClass("hidden");
         readerView.removeClass("hidden").addClass("active");
-            
-        book.turn("page", 1); // Her açılışta kapağa dön
+        
+        book.turn("page", startPage);
         currentZoom = 1; // Zoom'u sıfırla
         bookStage.css({
             'transform': 'scale(1)',
             'transform-origin': 'center center'
         });
+        
+        // Ayraç buton durumunu güncelle
+        updateBookmarkButtonState();
+    }
+
+    // Devam Et Modal'ını göster
+    function showContinueModal(bookmarkPage) {
+        // Sayfa numarasını kullanıcı formatına çevir (2-3, 4-5 gibi)
+        const pageDisplay = formatPageNumberForDisplay(bookmarkPage);
+        $('#continue-page-number').text(pageDisplay || bookmarkPage);
+        $('#continue-modal').addClass('show');
+    }
+
+    // Devam Et Modal'ını gizle
+    function hideContinueModal() {
+        $('#continue-modal').removeClass('show');
+    }
+
+    // Modal butonları
+    $('#btn-start-from-beginning').click(function() {
+        hideContinueModal();
+        openBook(1); // Baştan başla
+    });
+
+    $('#btn-continue-reading').click(function() {
+        const bookmark = getBookmark();
+        hideContinueModal();
+        if (bookmark && bookmark.pageNumber) {
+            openBook(bookmark.pageNumber); // Ayraç sayfasına git
+        } else {
+            openBook(1);
+        }
+    });
+
+    // Modal overlay'e tıklanınca kapat
+    $('.bookmark-modal-overlay').click(function() {
+        hideContinueModal();
+        // Varsayılan olarak baştan başlat
+        openBook(1);
     });
 
     // Kitaptan Kütüphaneye Dönüş
@@ -370,6 +441,281 @@ $(document).ready(function() {
             loadRandomReaderBackground();
             console.log('Arka plan değiştir butonu tıklandı');
         });
+
+        // Ayraç İşlevselliği
+        setupBookmarkHandlers();
+    }
+
+// /////////////////////////////////////////////////////////////
+
+// I. SAYFA NUMARASI GÖRÜNTÜLEME (Kullanıcıya Çift Sayfa Formatı)
+
+// /////////////////////////////////////////////////////////////
+
+
+
+/**
+
+ * Turn.js'ten gelen tek sayfa numarasını (Örn: 3, 4, 5...) alarak
+
+ * kullanıcının göreceği çift sayfa aralığına çevirir (Örn: '2-3', '4-5').
+
+ * @param {number} turnPage Turn.js'in o anki tek sayfa numarası.
+
+ * @returns {string} 'X-Y' formatında kullanıcı sayfası numarası veya boş dize.
+
+ */
+
+function formatPageNumberForDisplay(turnPage) {
+
+    // Kapaklar için boş döndür. totalPages'in global/dışarıda tanımlı olduğunu varsayar.
+
+    if (turnPage <= 2 || turnPage >= totalPages - 1) {
+
+        return '';
+
+    }
+
+    
+
+    let leftPage; // Soldaki çift sayfa numarası (2, 4, 6...)
+
+    
+
+    // Turn.js'in sayfa numarası ile gösterilecek sol sayfa arasındaki ilişki:
+
+    // Turn.js N=3 (tek) -> P=2 (P = N - 1)
+
+    // Turn.js N=4 (çift) -> P=2 (P = N - 2)
+
+    
+
+    if (turnPage % 2 !== 0) {
+
+        // Tek sayı ise (sağdaki sayfa)
+
+        leftPage = turnPage - 1;
+
+    } else {
+
+        // Çift sayı ise (soldaki sayfa)
+
+        leftPage = turnPage - 2;
+
+    }
+
+    
+
+    // 2'den küçükse (yani 1-2 seti veya daha küçükse) numara gösterme
+
+    if (leftPage < 2) {
+
+        return '';
+
+    }
+
+    
+
+    const rightPage = leftPage + 1;
+
+    
+
+    return leftPage + '-' + rightPage; 
+
+}
+
+
+
+// /////////////////////////////////////////////////////////////
+
+// II. TEXTBOX NAVİGASYONU (Girdiden Turn.js Sayfa Numarasına Çevirme)
+
+// /////////////////////////////////////////////////////////////
+
+
+
+/**
+
+ * Textbox'tan gelen kullanıcı sayfa numarasını (Örn: 4, 5) 
+
+ * alarak Turn.js'in gideceği tek sayfa numarasına çevirir.
+
+ * @param {string} inputValue Kullanıcının girdiği sayfa numarası.
+
+ * @returns {number} Turn.js'in hedefleyeceği sayfa numarası.
+
+ */
+
+function parsePageNumberFromInput(inputValue) {
+
+    if (!inputValue || inputValue.trim() === '') {
+
+        return 1;
+
+    }
+
+    
+
+    var targetUserPageNum = parseInt(inputValue);
+
+    
+
+    // Geçerli sayı değilse veya 2'den küçükse (içerik 2'den başlıyor)
+
+    if (isNaN(targetUserPageNum) || targetUserPageNum < 2) {
+
+        return 1;
+
+    }
+
+    
+
+    let leftPage; // Girdinin dahil olduğu çift sayfa setinin sol (çift) numarası
+
+    
+
+    // Girdiyi her zaman setin başlangıcına (çift sayıya) yuvarla.
+
+    if (targetUserPageNum % 2 !== 0) {
+
+        leftPage = targetUserPageNum - 1; // 3 -> 2, 5 -> 4
+
+    } else {
+
+        leftPage = targetUserPageNum; // 2 -> 2, 4 -> 4
+
+    }
+
+    
+
+    // Turn.js Hedef Sayfa Hesaplaması (N = P_left + 1)
+
+    // Bu, Turn.js'te setin sağındaki tek sayfa numarasına gitmeyi hedefler.
+
+    const targetTurnPage = leftPage + 1;
+
+    
+
+    // Geçerli Aralık Kontrolü
+
+    return Math.max(1, Math.min(targetTurnPage, totalPages));
+
+}
+    // Ayraç İşlevselliği Fonksiyonları
+    function setupBookmarkHandlers() {
+        // Ayraç Ekle/Kaldır Butonu
+        $("#btn-bookmark").click(function() {
+            const currentPage = book.turn("page");
+            const bookmark = getBookmark();
+            
+            if (bookmark && bookmark.pageNumber === currentPage) {
+                // Mevcut sayfada ayraç varsa kaldır
+                removeBookmark();
+                updateBookmarkButtonState();
+                const pageDisplay = formatPageNumberForDisplay(currentPage);
+                const displayText = pageDisplay ? `: ${pageDisplay}` : '';
+                showBookmarkNotification('Ayraç kaldırıldı' + displayText, false);
+            } else {
+                // Yeni ayraç ekle
+                setBookmark(currentPage);
+                updateBookmarkButtonState();
+                const pageDisplay = formatPageNumberForDisplay(currentPage);
+                const displayText = pageDisplay ? `: ${pageDisplay}` : '';
+                showBookmarkNotification('Ayraç eklendi' + displayText, true);
+            }
+        });
+
+        // Ayraca Git Butonu
+        $("#btn-goto-bookmark").click(function() {
+            const bookmark = getBookmark();
+            if (bookmark && bookmark.pageNumber) {
+                book.turn("page", bookmark.pageNumber);
+                const pageDisplay = formatPageNumberForDisplay(bookmark.pageNumber);
+                const displayText = pageDisplay ? `: ${pageDisplay}` : '';
+                showBookmarkNotification('Ayraca gidildi' + displayText, true);
+            }
+        });
+    }
+
+    // Ayraç kaydet
+    function setBookmark(pageNumber) {
+        const bookmark = {
+            pageNumber: pageNumber,
+            timestamp: new Date().getTime()
+        };
+        localStorage.setItem(BOOKMARK_KEY, JSON.stringify(bookmark));
+    }
+
+    // Ayraç al
+    function getBookmark() {
+        const stored = localStorage.getItem(BOOKMARK_KEY);
+        if (stored) {
+            try {
+                return JSON.parse(stored);
+            } catch (e) {
+                console.error('Ayraç parse hatası:', e);
+                return null;
+            }
+        }
+        return null;
+    }
+
+    // Ayraç kaldır
+    function removeBookmark() {
+        localStorage.removeItem(BOOKMARK_KEY);
+    }
+
+    // Ayraç buton durumunu güncelle
+    function updateBookmarkButtonState() {
+        const currentPage = book.turn("page");
+        const bookmark = getBookmark();
+        const $bookmarkBtn = $("#btn-bookmark");
+        const $gotoBookmarkBtn = $("#btn-goto-bookmark");
+
+        if (bookmark && bookmark.pageNumber) {
+            // Ayraç var
+            if (bookmark.pageNumber === currentPage) {
+                // Mevcut sayfada ayraç var - Kaldır butonu göster
+                $bookmarkBtn.html('⚐<span class="bookmark-cross"></span>');
+                $bookmarkBtn.attr('title', 'Kitap Ayracı Kaldır');
+                $bookmarkBtn.addClass('bookmark-active');
+                $gotoBookmarkBtn.hide();
+            } else {
+                // Başka sayfada ayraç var - Ekle butonu ve Ayraca Git butonu göster
+                $bookmarkBtn.html('⚐');
+                $bookmarkBtn.attr('title', 'Kitap Ayracı Ekle');
+                $bookmarkBtn.removeClass('bookmark-active');
+                $gotoBookmarkBtn.show();
+            }
+        } else {
+            // Ayraç yok - Ekle butonu göster
+            $bookmarkBtn.html('⚐');
+            $bookmarkBtn.attr('title', 'Kitap Ayracı Ekle');
+            $bookmarkBtn.removeClass('bookmark-active');
+            $gotoBookmarkBtn.hide();
+        }
+    }
+
+    // Ayraç bildirimi göster
+    function showBookmarkNotification(message, isSuccess) {
+        // Mevcut bildirimi kaldır (varsa)
+        $('.bookmark-notification').remove();
+        
+        const $notification = $('<div class="bookmark-notification">' + message + '</div>');
+        $('body').append($notification);
+        
+        // Bildirimi göster
+        setTimeout(function() {
+            $notification.addClass('show');
+        }, 10);
+        
+        // Bildirimi gizle (daha kısa süre)
+        setTimeout(function() {
+            $notification.removeClass('show');
+            setTimeout(function() {
+                $notification.remove();
+            }, 300);
+        }, 1200); // 2000ms'den 1200ms'ye düşürüldü
     }
 
     // Sayfaları yükle ve Turn.js'i başlat

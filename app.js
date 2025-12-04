@@ -13,7 +13,7 @@ $(document).ready(function() {
     var jsonPages = []; // Yüklenen JSON sayfaları (pageNumber bilgisi ile)
     const STORAGE_KEY = 'bookContent';
     const BOOKMARK_KEY = 'bookmark_book1'; // Kitap 1 için ayraç anahtarı
-    const MAX_PAGES = 50; // Maksimum sayfa sayısı (sayfa1.json - sayfa50.json) - İhtiyaca göre artırılabilir
+    const MAX_PAGES = 100; // Maksimum sayfa sayısı (sayfa1.json - sayfa100.json) - İhtiyaca göre artırılabilir
 
     // Video klasör yolları
     const LIBRARY_VIDEOS_FOLDER = 'kütüphane/';
@@ -442,8 +442,84 @@ $(document).ready(function() {
             console.log('Arka plan değiştir butonu tıklandı');
         });
 
+        // Harita Butonu - Parola korumalı
+        $("#btn-open-map").on('click', function() {
+            showMapPasswordModal();
+        });
+
         // Ayraç İşlevselliği
         setupBookmarkHandlers();
+    }
+
+    // Harita Parola Modal'ı
+    function showMapPasswordModal() {
+        // Modal oluştur
+        const modalHTML = `
+            <div id="map-password-modal" class="bookmark-modal">
+                <div class="bookmark-modal-overlay"></div>
+                <div class="bookmark-modal-content">
+                    <div class="bookmark-icon">🗺️</div>
+                    <h3 class="bookmark-modal-title">Demleme Âlemi Haritası</h3>
+                    <p class="bookmark-modal-text">Haritaya erişmek için parolayı girin:</p>
+                    <input type="text" id="map-password-input" class="map-password-input" placeholder="Parola girin..." autocomplete="off">
+                    <p id="map-password-error" class="map-password-error" style="display: none; color: #ef4444; margin-top: 10px; font-size: 0.9rem;"></p>
+                    <div class="bookmark-modal-buttons">
+                        <button class="bookmark-btn bookmark-btn-primary" id="btn-submit-password">
+                            <span>Giriş Yap</span>
+                        </button>
+                        <button class="bookmark-btn bookmark-btn-secondary" id="btn-cancel-password">
+                            <span>İptal</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        $('body').append(modalHTML);
+        $('#map-password-modal').addClass('show');
+        $('#map-password-input').focus();
+
+        // Enter tuşu ile gönder
+        $('#map-password-input').on('keypress', function(e) {
+            if (e.which === 13) {
+                checkMapPassword();
+            }
+        });
+
+        // Giriş butonu
+        $('#btn-submit-password').on('click', checkMapPassword);
+
+        // İptal butonu
+        $('#btn-cancel-password').on('click', function() {
+            $('#map-password-modal').remove();
+        });
+
+        // Overlay'e tıklanınca kapat
+        $('#map-password-modal .bookmark-modal-overlay').on('click', function() {
+            $('#map-password-modal').remove();
+        });
+    }
+
+    // Parola kontrolü
+    function checkMapPassword() {
+        const inputPassword = $('#map-password-input').val().trim();
+        const correctPassword = 'Bir gün bu kokunun peşinden gideceğim';
+        const $error = $('#map-password-error');
+
+        if (inputPassword === correctPassword) {
+            // Parola doğru - sessionStorage'a kaydet ve harita sayfasına git
+            sessionStorage.setItem('mapPasswordVerified', 'true');
+            window.location.href = 'harita.html';
+        } else {
+            // Parola yanlış - hata göster
+            $error.text('Parola yanlış! Lütfen tekrar deneyin.').show();
+            $('#map-password-input').val('').focus();
+            
+            // Hata mesajını 3 saniye sonra gizle
+            setTimeout(function() {
+                $error.fadeOut();
+            }, 3000);
+        }
     }
 
 // /////////////////////////////////////////////////////////////

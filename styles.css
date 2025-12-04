@@ -146,6 +146,28 @@ body {
     animation: titleGlow 4s ease-in-out infinite;
 }
 
+.map-link-btn {
+    display: inline-block;
+    margin-top: 20px;
+    padding: 12px 24px;
+    background: rgba(197, 160, 89, 0.15);
+    border: 2px solid rgba(197, 160, 89, 0.4);
+    color: var(--gold-accent);
+    font-family: var(--font-cinzel);
+    font-size: 1rem;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+    box-shadow: 0 0 10px rgba(197, 160, 89, 0.2);
+}
+
+.map-link-btn:hover {
+    background: rgba(197, 160, 89, 0.25);
+    border-color: var(--gold-accent);
+    box-shadow: 0 0 20px rgba(197, 160, 89, 0.5);
+    transform: translateY(-2px);
+}
+
 @keyframes titleGlow {
     0%, 100% {
         text-shadow: 
@@ -644,19 +666,21 @@ body {
 
 .bookmark-modal-content {
     position: relative;
-    background: linear-gradient(135deg, rgba(14, 10, 8, 0.95) 0%, rgba(26, 18, 14, 0.95) 100%);
-    border: 2px solid rgba(197, 160, 89, 0.5);
-    border-radius: 16px;
-    padding: 30px 40px;
-    max-width: 380px;
-    width: 85%;
+    background: linear-gradient(135deg, rgba(14, 10, 8, 0.98) 0%, rgba(26, 18, 14, 0.98) 100%);
+    border: 2px solid rgba(197, 160, 89, 0.6);
+    border-radius: 20px;
+    padding: 40px 50px;
+    max-width: 450px;
+    width: 90%;
     text-align: center;
     box-shadow: 
-        0 0 40px rgba(197, 160, 89, 0.4),
-        0 0 80px rgba(255, 215, 0, 0.2),
-        inset 0 0 30px rgba(197, 160, 89, 0.1);
-    animation: modalAppear 0.4s ease;
+        0 0 50px rgba(197, 160, 89, 0.5),
+        0 0 100px rgba(255, 215, 0, 0.3),
+        inset 0 0 40px rgba(197, 160, 89, 0.15),
+        inset 0 0 80px rgba(255, 215, 0, 0.1);
+    animation: modalAppear 0.5s ease;
     z-index: 1;
+    backdrop-filter: blur(10px);
 }
 
 @keyframes modalAppear {
@@ -671,10 +695,11 @@ body {
 }
 
 .bookmark-icon {
-    font-size: 2.5rem;
-    margin-bottom: 12px;
+    font-size: 3.5rem;
+    margin-bottom: 20px;
     animation: iconFloat 3s ease-in-out infinite;
-    filter: drop-shadow(0 0 15px rgba(197, 160, 89, 0.6));
+    filter: drop-shadow(0 0 20px rgba(197, 160, 89, 0.8));
+    display: block;
 }
 
 @keyframes iconFloat {
@@ -683,22 +708,25 @@ body {
 }
 
 .bookmark-modal-title {
-    font-family: var(--font-cinzel);
-    font-size: 1.4rem;
+    font-family: var(--font-cinzel-decorative);
+    font-size: 1.8rem;
     color: var(--gold-accent);
-    margin-bottom: 10px;
+    margin-bottom: 15px;
     text-shadow: 
-        0 0 15px rgba(197, 160, 89, 0.8),
-        0 0 30px rgba(255, 215, 0, 0.4);
-    letter-spacing: 1px;
+        0 0 20px rgba(197, 160, 89, 0.9),
+        0 0 40px rgba(255, 215, 0, 0.5),
+        0 0 60px rgba(255, 215, 0, 0.3);
+    letter-spacing: 2px;
+    font-weight: 700;
 }
 
 .bookmark-modal-text {
     font-family: var(--font-eb);
     font-size: 0.95rem;
     color: #e0d0b0;
-    margin-bottom: 20px;
-    line-height: 1.5;
+    margin-bottom: 25px;
+    line-height: 1.6;
+    text-align: center;
 }
 
 .bookmark-page-info {
@@ -828,6 +856,116 @@ body {
         0 0 20px rgba(197, 160, 89, 0.4),
         inset 0 0 20px rgba(197, 160, 89, 0.08);
     transform: translateY(-2px) scale(1.05);
+}
+
+/* ===== HARİTA BUTONU (Okuyucu Sayfası) ===== */
+.map-floating-btn {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(197, 160, 89, 0.2);
+    border: 2px solid rgba(197, 160, 89, 0.5);
+    color: var(--gold-accent);
+    font-size: 28px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 150;
+    transition: all 0.4s ease;
+    box-shadow: 
+        0 0 20px rgba(197, 160, 89, 0.4),
+        0 0 40px rgba(255, 215, 0, 0.2);
+    backdrop-filter: blur(5px);
+    padding: 0;
+    overflow: hidden;
+}
+
+.map-icon-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+    filter: blur(1px); /* Hafif blur efekti */
+    transition: filter 0.3s ease;
+}
+
+.map-floating-btn:hover {
+    background: rgba(197, 160, 89, 0.35);
+    border-color: var(--gold-accent);
+    box-shadow: 
+        0 0 30px rgba(197, 160, 89, 0.6),
+        0 0 60px rgba(255, 215, 0, 0.4),
+        inset 0 0 20px rgba(197, 160, 89, 0.1);
+    transform: scale(1.1) translateY(-5px);
+}
+
+.map-floating-btn:hover .map-icon-image {
+    filter: blur(0.5px) brightness(1.2) drop-shadow(0 0 10px rgba(197, 160, 89, 0.8));
+}
+
+.map-floating-btn:active {
+    transform: scale(1.05) translateY(-2px);
+}
+
+/* ===== HARİTA PAROLA MODAL TASARIMI ===== */
+.map-password-input {
+    width: 100%;
+    padding: 16px 20px;
+    background: rgba(14, 10, 8, 0.9);
+    border: 2px solid rgba(197, 160, 89, 0.5);
+    border-radius: 8px;
+    color: #e0d0b0;
+    font-family: var(--font-eb);
+    font-size: 1.1rem;
+    margin-top: 20px;
+    margin-bottom: 15px;
+    transition: all 0.4s ease;
+    text-align: center;
+    letter-spacing: 0.5px;
+    box-shadow: 
+        inset 0 0 10px rgba(197, 160, 89, 0.1),
+        0 0 10px rgba(197, 160, 89, 0.2);
+}
+
+.map-password-input:focus {
+    outline: none;
+    border-color: var(--gold-accent);
+    background: rgba(14, 10, 8, 0.95);
+    box-shadow: 
+        inset 0 0 15px rgba(197, 160, 89, 0.2),
+        0 0 20px rgba(197, 160, 89, 0.5),
+        0 0 40px rgba(255, 215, 0, 0.3);
+    transform: scale(1.02);
+}
+
+.map-password-input::placeholder {
+    color: rgba(197, 160, 89, 0.6);
+    font-style: italic;
+}
+
+.map-password-error {
+    color: #ef4444;
+    font-family: var(--font-eb);
+    font-size: 0.9rem;
+    margin-top: 12px;
+    margin-bottom: 8px;
+    text-align: center;
+    padding: 8px 12px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 6px;
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-10px); }
+    75% { transform: translateX(10px); }
 }
 
 /* ===== AYRAÇ BUTONLARI (Toolbar içinde) ===== */

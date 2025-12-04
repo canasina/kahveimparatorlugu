@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demleme Âlemi Haritası - Kahve İmparatorluğu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@400;700;900&family=Cormorant+Garamond:wght@300;400;600;700&family=EB+Garamond:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="harita.css">
+</head>
+<body>
+    <div class="map-page" id="mapPage" style="display: none;">
+        <!-- Header -->
+        <header class="map-header">
+            <button class="back-btn" onclick="history.back()">← Geri</button>
+            <h1 class="map-title">Demleme Âlemi Haritası</h1>
+        </header>
+
+        <!-- Main Content -->
+        <div class="map-wrapper">
+            <!-- Left: Map Container -->
+            <div class="map-container" id="mapContainer">
+                <div class="map-inner" id="mapInner">
+                    <img class="map-image" src="harita.png" alt="Demleme Âlemi Haritası" id="mapImage">
+                    
+                    <!-- Hotspots for regions -->
+                    <button class="map-hotspot" data-region="kopuk-tepeleri" id="hotspot1">
+                        <span class="hotspot-label">Köpük Tepeleri</span>
+                    </button>
+                    <button class="map-hotspot" data-region="cam-bardak-sehri" id="hotspot2">
+                        <span class="hotspot-label">Cam Bardak Şehri</span>
+                    </button>
+                    <button class="map-hotspot" data-region="aci-selaleler" id="hotspot3">
+                        <span class="hotspot-label">Acı Şelaleler</span>
+                    </button>
+                    <button class="map-hotspot" data-region="cayli-tepecikler" id="hotspot4">
+                        <span class="hotspot-label">Çaylı Tepecikler</span>
+                    </button>
+                    <button class="map-hotspot" data-region="ince-kule" id="hotspot5">
+                        <span class="hotspot-label">İnce Kule</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Right: Info Panel -->
+            <aside class="map-info">
+                <h2>Bölge Bilgisi</h2>
+                <div id="regionContent">
+                    <p class="info-placeholder">Haritada bir bölgeye tıklayarak detayları görüntüleyin.</p>
+                </div>
+            </aside>
+        </div>
+
+        <!-- Footer: Zoom Controls -->
+        <footer class="map-footer">
+            <div class="zoom-controls">
+                <button class="zoom-btn" id="zoomOutBtn" title="Uzaklaştır">−</button>
+                <span class="zoom-label">Zoom</span>
+                <button class="zoom-btn" id="zoomInBtn" title="Yakınlaştır">+</button>
+                <button class="reset-btn" id="resetViewBtn" title="Görünümü Sıfırla">Sıfırla</button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Parola Modal -->
+    <div id="map-password-screen" class="map-password-screen">
+        <div class="map-password-modal">
+            <div class="bookmark-icon">🗺️</div>
+            <h3 class="bookmark-modal-title">Demleme Âlemi Haritası</h3>
+            <p class="bookmark-modal-text">Haritaya erişmek için parolayı girin:</p>
+            <input type="text" id="map-password-input-direct" class="map-password-input" placeholder="Parola girin..." autocomplete="off">
+            <p id="map-password-error-direct" class="map-password-error" style="display: none;"></p>
+            <div class="bookmark-modal-buttons">
+                <button class="bookmark-btn bookmark-btn-primary" id="btn-submit-password-direct">
+                    <span>Giriş Yap</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Parola kontrolü
+        (function() {
+            const correctPassword = 'Bir gün bu kokunun peşinden gideceğim';
+            const storedPassword = sessionStorage.getItem('mapPasswordVerified');
+            
+            if (storedPassword === 'true') {
+                // Parola doğrulanmış, sayfayı göster
+                document.getElementById('mapPage').style.display = 'flex';
+                document.getElementById('map-password-screen').style.display = 'none';
+            } else {
+                // Parola modal'ını göster
+                document.getElementById('map-password-screen').style.display = 'flex';
+                
+                const passwordInput = document.getElementById('map-password-input-direct');
+                const submitBtn = document.getElementById('btn-submit-password-direct');
+                const errorMsg = document.getElementById('map-password-error-direct');
+                
+                function checkPassword() {
+                    const inputPassword = passwordInput.value.trim();
+                    if (inputPassword === correctPassword) {
+                        sessionStorage.setItem('mapPasswordVerified', 'true');
+                        document.getElementById('mapPage').style.display = 'flex';
+                        document.getElementById('map-password-screen').style.display = 'none';
+                    } else {
+                        errorMsg.textContent = 'Parola yanlış! Lütfen tekrar deneyin.';
+                        errorMsg.style.display = 'block';
+                        passwordInput.value = '';
+                        passwordInput.focus();
+                    }
+                }
+                
+                submitBtn.addEventListener('click', checkPassword);
+                passwordInput.addEventListener('keypress', function(e) {
+                    if (e.which === 13) {
+                        checkPassword();
+                    }
+                });
+                
+                passwordInput.focus();
+            }
+        })();
+    </script>
+    <script src="harita.js"></script>
+</body>
+</html>
+

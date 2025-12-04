@@ -1,0 +1,531 @@
+:root {
+    --bg-dark: #0e0a08;
+    --paper-color: #f7f1e3;
+    --gold-accent: #c5a059;
+    --font-cinzel: 'Cinzel', serif;
+    --font-cormorant: 'Cormorant Garamond', serif;
+    --font-eb: 'EB Garamond', serif;
+    
+    /* Kitap Boyutları (Açık Hal) */
+    --book-width: 850px; 
+    --book-height: 620px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    background-color: var(--bg-dark);
+    color: #2d2420;
+    font-family: var(--font-eb);
+    height: 100vh;
+    overflow: hidden;
+    user-select: none; /* Sürüklerken yazı seçilmesin */
+}
+
+/* ===== ARKAPLAN ===== */
+/* Kütüphane Video Arka Planı */
+.library-video-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+    overflow: hidden;
+    background: #000;
+    opacity: 1;
+    transition: opacity 1s ease-in-out;
+}
+
+.library-video-bg.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+#library-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.6;
+}
+
+.video-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.7) 100%);
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* Kitap Okuma Statik Arka Planı */
+.fantasy-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -2;
+    overflow: hidden;
+    background: #000;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+}
+
+.fantasy-bg.active {
+    opacity: 1;
+}
+
+.bg-image {
+    width: 110%;
+    height: 110%;
+    object-fit: cover;
+    opacity: 0.5;
+    animation: drift 90s infinite alternate ease-in-out;
+}
+
+@keyframes drift {
+    0% { transform: translate(0, 0) scale(1) rotate(0deg); }
+    25% { transform: translate(-4%, -3%) scale(1.04) rotate(0.5deg); }
+    50% { transform: translate(-2.5%, -5%) scale(1.06) rotate(-0.25deg); }
+    75% { transform: translate(-5%, -2%) scale(1.03) rotate(0.25deg); }
+    100% { transform: translate(-4%, -4%) scale(1.05) rotate(0deg); }
+}
+
+.fog-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('https://raw.githubusercontent.com/danielstuart14/CSS_FOG_ANIMATION/master/img/fog1.png') repeat-x;
+    background-size: 200% auto;
+    opacity: 0.3;
+    animation: fog 40s linear infinite;
+    z-index: 1;
+    pointer-events: none;
+}
+
+@keyframes fog {
+    0% { background-position: 0 0; }
+    100% { background-position: -200% 0; }
+}
+
+.vignette-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at center, transparent 40%, #000 100%);
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* ===== VIEW STATES ===== */
+.view { position: absolute; width: 100%; height: 100%; transition: opacity 0.5s ease; opacity: 0; pointer-events: none; z-index: 10; }
+.view.active { opacity: 1; pointer-events: all; }
+.view.hidden { opacity: 0; pointer-events: none; }
+
+/* ===== KÜTÜPHANE ===== */
+#library-view { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+.main-title { font-family: var(--font-cinzel); font-size: 4rem; color: var(--gold-accent); text-shadow: 0 0 30px rgba(197, 160, 89, 0.4); text-align: center; }
+.subtitle { font-family: var(--font-cormorant); font-size: 1.5rem; color: #a89f91; text-align: center; font-style: italic; }
+.shelf-container { margin-top: 5rem; display: flex; gap: 4rem; flex-wrap: wrap; justify-content: center; }
+
+.book-slot { cursor: pointer; transition: transform 0.4s; }
+.book-slot:hover { transform: translateY(-20px) scale(1.05); }
+.book-slot.locked { cursor: not-allowed; }
+.book-spine { width: 220px; height: 330px; border-radius: 4px; box-shadow: 0 20px 40px rgba(0,0,0,0.7); overflow: hidden; position: relative; }
+.book-spine img { width: 100%; height: 100%; object-fit: cover; }
+.book-spine.grayscale { filter: grayscale(1) opacity(0.7); }
+.lock-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 3rem; }
+.book-info { margin-top: 1rem; text-align: center; opacity: 0.8; }
+.book-info h3 { font-family: var(--font-cinzel); color: #e0d0b0; font-size: 1.1rem; }
+.book-info span { font-family: var(--font-cormorant); color: var(--gold-accent); font-size: 0.9rem; }
+.book-2 .book-spine img { filter: hue-rotate(40deg); }
+.book-3 .book-spine img { filter: hue-rotate(90deg); }
+
+/* ===== TURN.JS SAHNESİ ===== */
+#reader-view { display: flex; flex-direction: column; }
+.top-nav { 
+    position: absolute; 
+    top: 30px; 
+    left: 30px; 
+    z-index: 201; /* Toolbar'dan üstte olmalı */
+}
+
+.top-nav-right {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    z-index: 202; /* Toolbar ve hover area'dan üstte olmalı */
+    pointer-events: auto; /* Tıklamaları garanti et */
+}
+
+.minimal-btn { 
+    background: transparent; 
+    border: 2px solid rgba(197, 160, 89, 0.4); 
+    color: var(--gold-accent); 
+    padding: 12px 24px; 
+    font-family: var(--font-cinzel); 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    gap: 10px; 
+    transition: all 0.4s ease;
+    position: relative;
+    overflow: hidden;
+    border-radius: 6px;
+    box-shadow: 0 0 15px rgba(197, 160, 89, 0.2);
+    pointer-events: auto; /* Tıklamaları garanti et */
+    z-index: 1; /* Buton içeriği üstte olsun */
+}
+
+.minimal-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(197, 160, 89, 0.4), 
+        rgba(255, 215, 0, 0.6),
+        rgba(197, 160, 89, 0.4),
+        transparent
+    );
+    transition: left 0.8s ease; /* Daha yavaş geçiş */
+    z-index: -1;
+}
+
+.minimal-btn:hover::before {
+    left: 100%;
+}
+
+.minimal-btn:hover { 
+    background: rgba(197, 160, 89, 0.15); 
+    border-color: var(--gold-accent);
+    box-shadow: 
+        0 0 20px rgba(197, 160, 89, 0.5),
+        0 0 40px rgba(255, 215, 0, 0.3),
+        inset 0 0 20px rgba(197, 160, 89, 0.1);
+    transform: translateY(-2px);
+}
+
+.minimal-btn span {
+    position: relative;
+    z-index: 1;
+    text-shadow: 
+        0 0 10px rgba(197, 160, 89, 0.8),
+        0 0 20px rgba(255, 215, 0, 0.4);
+    animation: textGlow 2s ease-in-out infinite alternate;
+}
+
+@keyframes textGlow {
+    0% {
+        text-shadow: 
+            0 0 10px rgba(197, 160, 89, 0.8),
+            0 0 20px rgba(255, 215, 0, 0.4);
+    }
+    100% {
+        text-shadow: 
+            0 0 15px rgba(197, 160, 89, 1),
+            0 0 30px rgba(255, 215, 0, 0.6),
+            0 0 45px rgba(255, 215, 0, 0.4);
+    }
+}
+
+/* ===== TOOLBAR ===== */
+.toolbar-hover-area {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 60px;
+    z-index: 199;
+    pointer-events: all;
+}
+
+/* Toolbar hover area, top-nav butonlarının üstüne gelmesin - sağ üst köşeyi hariç tut */
+.top-nav-right {
+    z-index: 202 !important;
+    pointer-events: auto !important;
+}
+
+.top-nav {
+    z-index: 202 !important;
+    pointer-events: auto !important;
+}
+
+.book-toolbar {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100%);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: rgba(14, 10, 8, 0.85);
+    backdrop-filter: blur(10px);
+    border-radius: 0 0 12px 12px;
+    border: 1px solid rgba(197, 160, 89, 0.2);
+    border-top: none;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+/* Sadece üst hover alanına mouse gelince toolbar görünsün - yukarıdan aşağı gelme */
+.toolbar-hover-area:hover ~ .book-toolbar,
+.book-toolbar:hover {
+    opacity: 1;
+    pointer-events: all;
+    transform: translateX(-50%) translateY(0);
+}
+
+
+/* Top-nav veya minimal-btn üzerindeyken toolbar görünmesin */
+.top-nav:hover ~ .toolbar-hover-area,
+.top-nav:hover ~ .book-toolbar,
+.minimal-btn:hover ~ .book-toolbar,
+.top-nav:hover ~ .toolbar-hover-area ~ .book-toolbar {
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transform: translateX(-50%) translateY(-100%) !important;
+}
+
+/* Top-nav alanı genişletilmiş hover zone */
+.top-nav::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    right: -10px;
+    bottom: -10px;
+    z-index: -1;
+}
+
+.toolbar-btn {
+    background: rgba(197, 160, 89, 0.15);
+    border: 2px solid rgba(197, 160, 89, 0.4);
+    color: var(--gold-accent);
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 18px;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.4s ease;
+    font-family: var(--font-cinzel);
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 10px rgba(197, 160, 89, 0.2);
+}
+
+.toolbar-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, 
+        transparent, 
+        rgba(197, 160, 89, 0.4), 
+        rgba(255, 215, 0, 0.6),
+        rgba(197, 160, 89, 0.4),
+        transparent
+    );
+    transition: left 0.8s ease;
+    z-index: -1;
+}
+
+.toolbar-btn:hover::before {
+    left: 100%;
+}
+
+.toolbar-btn {
+    text-shadow: 
+        0 0 8px rgba(197, 160, 89, 0.8),
+        0 0 15px rgba(255, 215, 0, 0.4);
+}
+
+.toolbar-btn:hover {
+    background: rgba(197, 160, 89, 0.25);
+    border-color: var(--gold-accent);
+    box-shadow: 
+        0 0 15px rgba(197, 160, 89, 0.5),
+        0 0 30px rgba(255, 215, 0, 0.3),
+        inset 0 0 15px rgba(197, 160, 89, 0.1);
+    transform: scale(1.1) translateY(-2px);
+}
+
+.page-input {
+    background: rgba(197, 160, 89, 0.1);
+    border: 2px solid rgba(197, 160, 89, 0.4);
+    color: var(--gold-accent);
+    width: 70px;
+    height: 36px;
+    padding: 0 10px;
+    border-radius: 6px;
+    font-family: var(--font-cinzel);
+    font-size: 14px;
+    text-align: center;
+    transition: all 0.4s ease;
+    /* Spinner'ları kaldır */
+    -moz-appearance: textfield;
+    appearance: textfield;
+}
+
+.page-input::-webkit-outer-spin-button,
+.page-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+.page-input:focus {
+    outline: none;
+    background: rgba(197, 160, 89, 0.2);
+    border-color: var(--gold-accent);
+    box-shadow: 
+        0 0 10px rgba(197, 160, 89, 0.4),
+        0 0 20px rgba(255, 215, 0, 0.2);
+}
+
+.page-input::placeholder {
+    color: rgba(197, 160, 89, 0.5);
+}
+
+#book-stage {
+    width: 100vw; height: 100vh;
+    display: flex; justify-content: center; align-items: center;
+    position: relative;
+}
+
+#flipbook {
+    width: var(--book-width); height: var(--book-height);
+    transition: margin-left 0.5s;
+    position: relative;
+}
+
+/* Sayfa Kenar Gölgeleri - Dinamik Kıvrım Etkisi */
+
+/* Soft (İç Sayfa) sayfalar için kenar gölgeleri */
+/* Sol Sayfalar (Çift numaralı) - Sağ kenarda içeri doğru gölge */
+#flipbook .soft:nth-child(even) .page-content,
+#flipbook > div:nth-child(even).soft .page-content {
+    background-image: 
+        linear-gradient(to right, 
+            rgba(0, 0, 0, 0) 85%, 
+            rgba(0, 0, 0, 0.15) 90%,
+            rgba(0, 0, 0, 0.25) 95%,
+            rgba(0, 0, 0, 0.3) 100%
+        ),
+        url("https://www.transparenttextures.com/patterns/paper.png");
+    background-size: 100% 100%, auto;
+}
+
+/* Sağ Sayfalar (Tek numaralı) - Sol kenarda içeri doğru gölge */
+#flipbook .soft:nth-child(odd) .page-content,
+#flipbook > div:nth-child(odd).soft .page-content {
+    background-image: 
+        linear-gradient(to left, 
+            rgba(0, 0, 0, 0) 85%, 
+            rgba(0, 0, 0, 0.15) 90%,
+            rgba(0, 0, 0, 0.25) 95%,
+            rgba(0, 0, 0, 0.3) 100%
+        ),
+        url("https://www.transparenttextures.com/patterns/paper.png");
+    background-size: 100% 100%, auto;
+}
+
+/* Hard (Kapak) sayfalar için gölge yok - kağıt dokusunu koru */
+#flipbook .hard .page-content {
+    background-image: url("https://www.transparenttextures.com/patterns/paper.png");
+    background-size: auto;
+}
+
+/* Sayfa Stilleri */
+#flipbook .page {
+    background-color: var(--paper-color);
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+}
+
+/* Hard (Kapak) ve Soft (Kağıt) */
+#flipbook .hard { background: #1a120e; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+#flipbook .soft { background-color: var(--paper-color); }
+
+/* İçerik Kutusu */
+.page-content {
+    width: 100%; height: 100%; padding: 40px;
+    box-sizing: border-box; overflow: hidden;
+    /* Kağıt Dokusu - Base background */
+    background-color: var(--paper-color);
+    background-image: url("https://www.transparenttextures.com/patterns/paper.png"); 
+    background-size: auto, auto;
+}
+
+.cover-content { padding: 0; }
+.cover-content img { width: 100%; height: 100%; object-fit: cover; }
+.page-content--centered { display: flex; align-items: center; justify-content: center; flex-direction: column; }
+
+/* Tipografi - Varsayılan ayarlar */
+.text-page { color: #2d2420; line-height: 1.4; font-size: 0.75rem; text-align: justify; }
+.chapter-head { text-align: center; margin-bottom: 15px; margin-top: 5px; }
+.chapter-num { font-family: var(--font-cinzel); color: #8a7a70; font-size: 0.75rem; letter-spacing: 1.5px; }
+.chapter-name { display: block; font-family: var(--font-cinzel); font-size: 1.2rem; font-weight: bold; color: #4a3b32; margin-top: 3px; }
+.book-title { font-family: var(--font-cinzel); font-size: 2.5rem; color: #5c4033; text-align: center; }
+
+.text-body p { margin-bottom: 1rem; text-indent: 1.5em; }
+.text-body p:first-of-type { text-indent: 0; }
+/* Büyük harf efekti sadece başlıklı sayfalarda */
+.text-page.has-chapter .text-body p:first-of-type::first-letter {
+    float: left; font-size: 2.5rem; line-height: 0.75; 
+    padding-right: 8px; font-family: var(--font-cinzel); color: var(--gold-accent);
+}
+
+.text-body h4 {
+    font-family: var(--font-cinzel);
+    font-size: 1.1rem;
+    color: #4a3b32;
+    margin-top: 1.2rem;
+    margin-bottom: 0.8rem;
+}
+
+.page-footer {
+    position: absolute; bottom: 20px; left: 0; width: 100%;
+    text-align: center; font-family: var(--font-cinzel); color: #888;
+    font-size: 0.85rem;
+}
+
+/* Sayfa Resimleri - Tam Sayfa */
+.page-image-full {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.full-page-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+/* Turn.js Otomatik Gölge Sınıfı */
+.shadow { box-shadow: 0 0 20px rgba(0,0,0,0.5) !important; }

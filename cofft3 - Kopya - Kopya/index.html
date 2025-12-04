@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kahve İmparatorluğu - Grand Edition</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:wght@300;400;600;700&family=EB+Garamond:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <!-- Kütüphane için Video Arka Plan -->
+    <div class="library-video-bg" id="library-video-bg">
+        <video id="library-video" autoplay muted loop playsinline>
+            <!-- Video kaynakları JavaScript ile dinamik eklenecek -->
+        </video>
+        <div class="video-overlay"></div>
+    </div>
+
+    <!-- Kitap Okuma için Statik Arka Plan -->
+    <div class="fantasy-bg" id="reader-bg">
+        <img id="reader-bg-image" src="" alt="Fantasy World" class="bg-image">
+        <div class="fog-overlay"></div>
+        <div class="vignette-overlay"></div>
+    </div>
+
+    <div id="app">
+        <!-- 1. Kütüphane -->
+        <div id="library-view" class="view active">
+            <header class="library-header">
+                <h1 class="main-title">KAHVE İMPARATORLUĞU</h1>
+                <p class="subtitle">Efsaneler Kütüphanesi</p>
+            </header>
+            <div class="shelf-container">
+                <div class="book-slot" id="book-1-trigger">
+                    <div class="book-spine">
+                        <img src="./kitap1.png" alt="Kitap 1">
+                        <div class="spine-glow"></div>
+                    </div>
+                    <div class="book-info"><h3>Köpükten Kapılar</h3><span>Okumak İçin Dokun</span></div>
+                </div>
+                <div class="book-slot locked book-2">
+                    <div class="book-spine grayscale"><img src="./kitap1.png" alt="Kitap 2"><div class="lock-overlay">🔒</div></div>
+                    <div class="book-info"><h3>Kül Sarayı</h3><span>Yakında</span></div>
+                </div>
+                <div class="book-slot locked book-3">
+                    <div class="book-spine grayscale"><img src="./kitap1.png" alt="Kitap 3"><div class="lock-overlay">🔒</div></div>
+                    <div class="book-info"><h3>Son Dem</h3><span>Yakında</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Okuma Sahnesi -->
+        <div id="reader-view" class="view hidden">
+            <!-- Toolbar Hover Alanı -->
+            <div class="toolbar-hover-area"></div>
+            
+            <!-- Toolbar -->
+            <div class="book-toolbar" id="book-toolbar">
+                <button id="btn-zoom-out" class="toolbar-btn" title="Uzaklaştır">−</button>
+                <button id="btn-zoom-in" class="toolbar-btn" title="Yakınlaştır">+</button>
+                <button id="btn-first-page" class="toolbar-btn" title="En Başa Dön">⏮</button>
+                <button id="btn-previous" class="toolbar-btn" title="Önceki Sayfa">◀</button>
+                <input type="number" id="page-input" class="page-input" placeholder="Sayfa" min="1" max="12" title="Sayfa numarası girin">
+                <button id="btn-next" class="toolbar-btn" title="Sonraki Sayfa">▶</button>
+                <button id="btn-last-page" class="toolbar-btn" title="En Sona Git">⏭</button>
+            </div>
+            
+            <div class="top-nav">
+                <button id="btn-back-library" class="minimal-btn"><span>❮ Kütüphaneye Dön</span></button>
+            </div>
+            
+            <div class="top-nav-right">
+                <button id="btn-change-background" class="minimal-btn"><span>↻ Arka Planı Değiştir</span></button>
+            </div>
+
+            <div id="book-stage">
+                <div id="flipbook">
+                    
+                    <!-- S1: Ön Kapak -->
+                    <div class="hard"><div class="page-content cover-content"><img src="./kitap1.png" alt="Ön Kapak"></div></div>
+
+                    <!-- S2: İç Kapak -->
+                    <div class="hard">
+                        <div class="page-content page-content--centered">
+                        </div>
+                    </div>
+
+                    <!-- İçerik sayfaları JavaScript ile dinamik olarak eklenecek -->
+                    <!-- Sayfalar localStorage'dan yüklenecek -->
+
+                    <!-- S11: İç Arka -->
+                    <div class="hard">
+                        <div class="page-content page-content--centered">
+                            <h3 style="font-family: var(--font-cinzel); color: #8a7a70;">DEVAM EDECEK...</h3>
+                        </div>
+                    </div>
+
+                    <!-- S12: Arka Kapak -->
+                    <div class="hard"><div class="page-content cover-content"><img src="./arka1.png" alt="Arka Kapak"></div></div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="turn.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

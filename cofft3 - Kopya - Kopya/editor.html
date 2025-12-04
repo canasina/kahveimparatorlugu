@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kitap İçerik Editörü - Canlı Önizleme</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:wght@300;400;600;700&family=EB+Garamond:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'EB Garamond', serif;
+            background: linear-gradient(135deg, #0e0a08 0%, #1a120e 100%);
+            color: #e0d0b0;
+            min-height: 100vh;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            height: calc(100vh - 40px);
+        }
+
+        .editor-panel {
+            background: rgba(26, 18, 14, 0.9);
+            border: 1px solid rgba(197, 160, 89, 0.3);
+            border-radius: 8px;
+            padding: 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .preview-panel {
+            background: rgba(26, 18, 14, 0.9);
+            border: 1px solid rgba(197, 160, 89, 0.3);
+            border-radius: 8px;
+            padding: 30px;
+            overflow-y: auto;
+            overflow-x: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Önizlemeyi ortala */
+        }
+
+        h1 {
+            font-family: 'Cinzel', serif;
+            color: #c5a059;
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+        }
+
+        h2 {
+            font-family: 'Cinzel', serif;
+            color: #c5a059;
+            margin-bottom: 20px;
+            font-size: 1.4rem;
+        }
+
+        .subtitle {
+            color: #a89f91;
+            margin-bottom: 20px;
+            font-style: italic;
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #c5a059;
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+        }
+
+        input[type="number"],
+        input[type="text"],
+        textarea {
+            width: 100%;
+            padding: 12px;
+            background: rgba(14, 10, 8, 0.8);
+            border: 1px solid rgba(197, 160, 89, 0.3);
+            border-radius: 4px;
+            color: #e0d0b0;
+            font-family: 'EB Garamond', serif;
+            font-size: 1rem;
+        }
+
+        input[type="range"] {
+            padding: 0;
+            height: 6px;
+            background: rgba(197, 160, 89, 0.2);
+            border-radius: 3px;
+            outline: none;
+            cursor: pointer;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--gold-accent);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(197, 160, 89, 0.5);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            background: var(--gold-accent);
+            border-radius: 50%;
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 0 10px rgba(197, 160, 89, 0.5);
+        }
+
+        input:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #c5a059;
+            box-shadow: 0 0 10px rgba(197, 160, 89, 0.2);
+        }
+
+        textarea {
+            min-height: 300px;
+            resize: vertical;
+            line-height: 1.8;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: rgba(197, 160, 89, 0.2);
+            border: 1px solid rgba(197, 160, 89, 0.5);
+            border-radius: 4px;
+            color: #c5a059;
+            font-family: 'Cinzel', serif;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        button:hover {
+            background: rgba(197, 160, 89, 0.3);
+            border-color: #c5a059;
+            transform: translateY(-2px);
+        }
+
+        button.primary {
+            background: rgba(197, 160, 89, 0.4);
+        }
+
+        .info-text {
+            color: #a89f91;
+            font-size: 0.85rem;
+            margin-top: 8px;
+            font-style: italic;
+        }
+
+        /* Canlı Önizleme Stilleri - styles.css'ten miras alınan */
+        .live-preview {
+            background-color: var(--paper-color);
+            background-image: url("https://www.transparenttextures.com/patterns/paper.png");
+            background-size: auto;
+            padding: 0; /* Padding dinamik olarak uygulanacak */
+            width: 425px; /* Tek sayfa genişliği (850px / 2 = 425px) */
+            height: 620px; /* Gerçek sayfa yüksekliği */
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
+            position: relative;
+            color: #2d2420;
+            text-align: justify;
+            margin: 0 auto; /* Ortala */
+            overflow: hidden; /* Taşmayı önle */
+            box-sizing: border-box;
+        }
+
+        .live-preview .text-page {
+            color: #2d2420;
+            line-height: 1.5;
+            font-size: 0.9rem;
+            text-align: justify;
+        }
+
+        .live-preview .chapter-head {
+            text-align: center;
+            margin-bottom: 15px;
+            margin-top: 5px;
+        }
+
+        .live-preview .chapter-num {
+            font-family: var(--font-cinzel);
+            color: #8a7a70;
+            font-size: 0.75rem;
+            letter-spacing: 1.5px;
+        }
+
+        .live-preview .chapter-name {
+            display: block;
+            font-family: var(--font-cinzel);
+            font-size: 1.4rem;
+            font-weight: bold;
+            color: #4a3b32;
+            margin-top: 3px;
+        }
+
+        .live-preview .text-body {
+            margin-bottom: 20px;
+        }
+
+        .live-preview .text-body p {
+            margin-bottom: 1rem;
+            text-indent: 1.5em;
+        }
+
+        .live-preview .text-body p:first-of-type {
+            text-indent: 0;
+        }
+
+        /* Büyük harf efekti sadece başlıklı sayfalarda */
+        .live-preview .text-page.has-chapter .text-body p:first-of-type::first-letter {
+            float: left;
+            font-size: 2.5rem;
+            line-height: 0.75;
+            padding-right: 8px;
+            font-family: var(--font-cinzel);
+            color: var(--gold-accent);
+        }
+
+        .live-preview .page-footer {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            font-family: var(--font-cinzel);
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        .live-preview h4 {
+            margin-top: 1.2rem;
+            margin-bottom: 0.8rem;
+            font-family: var(--font-cinzel);
+            color: #4a3b32;
+            font-size: 1.1rem;
+        }
+
+        .live-preview strong {
+            font-weight: 600;
+        }
+
+        .live-preview .page-image-full {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .live-preview .full-page-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .page-selector {
+            margin-bottom: 20px;
+        }
+
+        .page-selector {
+            position: relative;
+        }
+
+        .last-page-info {
+            font-size: 0.75rem;
+            color: #a89f91;
+            font-weight: normal;
+            font-style: italic;
+            margin-left: 8px;
+            font-family: 'EB Garamond', serif;
+        }
+
+        .custom-select-wrapper {
+            position: relative;
+        }
+
+        .page-selector select {
+            width: 100%;
+            padding: 12px;
+            background: rgba(14, 10, 8, 0.8);
+            border: 1px solid rgba(197, 160, 89, 0.3);
+            border-radius: 4px;
+            color: #e0d0b0;
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+            cursor: pointer;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23c5a059' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 40px;
+        }
+
+        .page-selector select:focus {
+            outline: none;
+            border-color: #c5a059;
+            box-shadow: 0 0 10px rgba(197, 160, 89, 0.2);
+        }
+
+        /* Dropdown açıldığında kaydırma için - tarayıcı dropdown'ı için */
+        .page-selector select option {
+            background: rgba(14, 10, 8, 0.95);
+            color: #e0d0b0;
+            padding: 10px;
+        }
+
+        /* Firefox için select dropdown kaydırma */
+        @-moz-document url-prefix() {
+            .page-selector select {
+                max-height: 300px;
+            }
+        }
+
+        /* Select elementine size ekleyerek kaydırma sağlama (geçici olarak) */
+        .page-selector select[size] {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        /* Scrollbar stilleri (Chrome, Edge, Safari) */
+        .editor-panel::-webkit-scrollbar,
+        .preview-panel::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .editor-panel::-webkit-scrollbar-track,
+        .preview-panel::-webkit-scrollbar-track {
+            background: rgba(14, 10, 8, 0.5);
+            border-radius: 5px;
+        }
+
+        .editor-panel::-webkit-scrollbar-thumb,
+        .preview-panel::-webkit-scrollbar-thumb {
+            background: rgba(197, 160, 89, 0.4);
+            border-radius: 5px;
+            border: 2px solid rgba(14, 10, 8, 0.5);
+        }
+
+        .editor-panel::-webkit-scrollbar-thumb:hover,
+        .preview-panel::-webkit-scrollbar-thumb:hover {
+            background: rgba(197, 160, 89, 0.6);
+        }
+
+        .empty-preview {
+            text-align: center;
+            padding: 100px 20px;
+            color: #a89f91;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sol Panel: Editör -->
+        <div class="editor-panel">
+            <h1>Kitap İçerik Editörü</h1>
+            <p class="subtitle">İçerik girerken sağ tarafta canlı önizleme görünecektir</p>
+
+            <form id="page-form">
+                <div class="page-selector">
+                    <label for="page-select">
+                        Sayfa Seç / Yeni Ekle
+                        <span id="last-page-info" class="last-page-info"></span>
+                    </label>
+                    <div class="custom-select-wrapper">
+                        <select id="page-select" size="1">
+                            <option value="new">+ Yeni Sayfa Ekle</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="page-number">Sayfa Numarası</label>
+                    <input type="number" id="page-number" min="1" required>
+                    <p class="info-text">Not: Kapaklar (1-2 ve son 2 sayfa) düzenlenemez</p>
+                </div>
+
+                <div class="form-group">
+                    <label for="chapter-title">Bölüm Başlığı (Opsiyonel)</label>
+                    <input type="text" id="chapter-title" placeholder="Örn: BÖLÜM I - Demleme Âlemi">
+                </div>
+
+                <div class="form-group">
+                    <label for="page-image">Resim (Opsiyonel)</label>
+                    <div style="display: flex; gap: 10px; align-items: flex-end;">
+                        <div style="flex: 1;">
+                            <input type="text" id="page-image" placeholder="Örn: images/foto1.jpg veya https://example.com/resim.jpg">
+                        </div>
+                        <div>
+                            <input type="file" id="image-file-input" accept="image/*" style="display: none;">
+                            <button type="button" id="btn-select-image" style="padding: 12px 20px; background: rgba(197, 160, 89, 0.2); border: 1px solid rgba(197, 160, 89, 0.4); border-radius: 4px; color: var(--gold-accent); cursor: pointer; font-family: 'Cinzel', serif; font-size: 0.9rem; transition: all 0.3s ease;">Dosya Seç</button>
+                        </div>
+                    </div>
+                    <p class="info-text" style="margin-top: 5px;">Yerel dosya için: images/foto1.jpg | Dış URL için: https://example.com/resim.jpg</p>
+                    <p class="info-text" id="image-file-name" style="margin-top: 5px; color: #4ade80; display: none;"></p>
+                </div>
+
+                <div class="form-group">
+                    <label for="page-content">Sayfa İçeriği</label>
+                    <textarea id="page-content" placeholder="Sayfa içeriğini buraya yazın. HTML etiketleri kullanabilirsiniz (örn: &lt;p&gt;, &lt;h4&gt;, &lt;strong&gt;)."></textarea>
+                    <p class="info-text">HTML etiketleri desteklenir: &lt;p&gt;, &lt;h4&gt;, &lt;strong&gt;, &lt;em&gt; vb.</p>
+                    <p class="info-text" id="word-count" style="margin-top: 5px;">Kelime sayısı: 0 (Hedef: ~225 kelime/sayfa)</p>
+                </div>
+
+                <div class="form-group">
+                    <label>Sayfa Ayarları</label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                        <div>
+                            <label for="font-size" style="font-size: 0.85rem; margin-bottom: 5px;">Font Boyutu:</label>
+                            <input type="range" id="font-size" min="0.7" max="1.2" step="0.05" value="0.75" style="width: 100%;">
+                            <span id="font-size-value" style="font-size: 0.8rem; color: #a89f91;">0.75rem</span>
+                        </div>
+                        <div>
+                            <label for="line-height" style="font-size: 0.85rem; margin-bottom: 5px;">Satır Aralığı:</label>
+                            <input type="range" id="line-height" min="1.2" max="2.0" step="0.1" value="1.4" style="width: 100%;">
+                            <span id="line-height-value" style="font-size: 0.8rem; color: #a89f91;">1.4</span>
+                        </div>
+                        <div>
+                            <label for="chapter-size" style="font-size: 0.85rem; margin-bottom: 5px;">Bölüm Başlığı:</label>
+                            <input type="range" id="chapter-size" min="1.0" max="2.5" step="0.1" value="1.2" style="width: 100%;">
+                            <span id="chapter-size-value" style="font-size: 0.8rem; color: #a89f91;">1.2rem</span>
+                        </div>
+                        <div>
+                            <label for="padding-size" style="font-size: 0.85rem; margin-bottom: 5px;">Sayfa Padding:</label>
+                            <input type="range" id="padding-size" min="20" max="60" step="5" value="40" style="width: 100%;">
+                            <span id="padding-size-value" style="font-size: 0.8rem; color: #a89f91;">40px</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group" id="image-settings-group" style="display: none;">
+                    <label>Resim Ayarları (Önizlemede sürükleyerek düzenleyebilirsiniz)</label>
+                    <p class="info-text" style="margin-top: 5px; font-size: 0.85rem; color: #a89f91;">
+                        💡 İpucu: Sağ taraftaki önizlemede resme tıklayın, köşelerden boyutlandırın ve sürükleyerek konumlandırın.
+                    </p>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                        <div>
+                            <label for="image-width" style="font-size: 0.85rem; margin-bottom: 5px;">Genişlik (%):</label>
+                            <input type="range" id="image-width" min="30" max="100" step="5" value="100" style="width: 100%;">
+                            <span id="image-width-value" style="font-size: 0.8rem; color: #a89f91;">100%</span>
+                        </div>
+                        <div>
+                            <label for="image-max-height" style="font-size: 0.85rem; margin-bottom: 5px;">Maks. Yükseklik (px):</label>
+                            <input type="range" id="image-max-height" min="100" max="500" step="50" value="300" style="width: 100%;">
+                            <span id="image-max-height-value" style="font-size: 0.8rem; color: #a89f91;">300px</span>
+                        </div>
+                        <div>
+                            <label for="image-align" style="font-size: 0.85rem; margin-bottom: 5px;">Hizalama:</label>
+                            <select id="image-align" style="width: 100%; padding: 8px; background: rgba(14, 10, 8, 0.8); border: 1px solid rgba(197, 160, 89, 0.3); border-radius: 4px; color: #e0d0b0; font-family: 'Cinzel', serif; font-size: 0.9rem;">
+                                <option value="center">Ortala</option>
+                                <option value="left">Sol</option>
+                                <option value="right">Sağ</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="image-margin" style="font-size: 0.85rem; margin-bottom: 5px;">Üst/Alt Boşluk (px):</label>
+                            <input type="range" id="image-margin" min="0" max="50" step="5" value="15" style="width: 100%;">
+                            <span id="image-margin-value" style="font-size: 0.8rem; color: #a89f91;">15px</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" id="btn-save" class="primary">Kaydet</button>
+                    <button type="button" id="btn-delete">Sil</button>
+                    <button type="button" id="btn-export">Bu Sayfayı JSON İndir</button>
+                    <button type="button" id="btn-export-all">Tüm Sayfaları İndir</button>
+                    <button type="button" id="btn-clear-storage" style="background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.5); color: #f87171;">localStorage Temizle</button>
+                </div>
+                
+            </form>
+        </div>
+
+        <!-- Sağ Panel: Canlı Önizleme -->
+        <div class="preview-panel">
+            <h2>Canlı Önizleme</h2>
+            <p class="subtitle">Yazdığınız içerik burada gerçek zamanlı olarak görünecektir</p>
+            
+            <div class="live-preview" id="live-preview">
+                <div class="empty-preview">
+                    İçerik girmeye başladığınızda önizleme burada görünecektir...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            const STORAGE_KEY = 'bookContent';
+            
+            // Sayfa listesini yükle
+            loadPageSelector();
+            
+            // İlk yüklemede en son sayfa bilgisini göster
+            const initialData = getStoredData();
+            if (initialData.pages && initialData.pages.length > 0) {
+                const maxPage = Math.max(...initialData.pages.map(p => p.pageNumber));
+                updateLastPageInfo(maxPage);
+            } else {
+                updateLastPageInfo(0);
+            }
+            
+            // Select dropdown kaydırma için
+            const $pageSelect = $('#page-select');
+            
+            // Select açıldığında (focus) size'ı artır
+            $pageSelect.on('focus', function() {
+                const optionCount = $(this).find('option').length;
+                // Maksimum 10 seçenek göster, geri kalanı kaydırma ile erişilebilir
+                $(this).attr('size', Math.min(optionCount, 10));
+            });
+            
+            // Select kapandığında (blur) size'ı tekrar 1 yap
+            $pageSelect.on('blur', function() {
+                $(this).attr('size', 1);
+            });
+            
+            // Seçim yapıldığında da size'ı 1 yap
+            $pageSelect.on('change', function() {
+                $(this).attr('size', 1);
+                $(this).blur(); // Focus'u kaldır
+            });
+            
+            // Sayfa ayarları için varsayılan değerler
+            let pageSettings = {
+                fontSize: 0.75,
+                lineHeight: 1.4,
+                chapterSize: 1.2,
+                paddingSize: 40
+            };
+
+            // Resim ayarları için varsayılan değerler
+            let imageSettings = {
+                width: 100,
+                maxHeight: 300,
+                align: 'center',
+                margin: 15
+            };
+
+            // Slider event handler'ları
+            $('#font-size').on('input', function() {
+                pageSettings.fontSize = parseFloat($(this).val());
+                $('#font-size-value').text(pageSettings.fontSize + 'rem');
+                updateLivePreview();
+            });
+
+            $('#line-height').on('input', function() {
+                pageSettings.lineHeight = parseFloat($(this).val());
+                $('#line-height-value').text(pageSettings.lineHeight);
+                updateLivePreview();
+            });
+
+            $('#chapter-size').on('input', function() {
+                pageSettings.chapterSize = parseFloat($(this).val());
+                $('#chapter-size-value').text(pageSettings.chapterSize + 'rem');
+                updateLivePreview();
+            });
+
+            $('#padding-size').on('input', function() {
+                pageSettings.paddingSize = parseInt($(this).val());
+                $('#padding-size-value').text(pageSettings.paddingSize + 'px');
+                updateLivePreview();
+            });
+
+            // Kelime sayacı için event listener
+            $('#page-content').on('input keyup', function() {
+                updateWordCount();
+                updateLivePreview();
+            });
+
+            // Canlı önizleme için event listener'lar
+            $('#chapter-title').on('input keyup', function() {
+                updateLivePreview();
+            });
+
+            $('#page-image').on('input keyup', function() {
+                const imageUrl = $(this).val().trim();
+                // Resim ayarları grubunu gizle (artık tam sayfa resim gösterimi kullanılıyor)
+                $('#image-settings-group').hide();
+                updateLivePreview();
+            });
+
+            // Resim ayarları event handler'ları
+            $('#image-width').on('input', function() {
+                imageSettings.width = parseInt($(this).val());
+                $('#image-width-value').text(imageSettings.width + '%');
+                updateLivePreview();
+            });
+
+            $('#image-max-height').on('input', function() {
+                imageSettings.maxHeight = parseInt($(this).val());
+                $('#image-max-height-value').text(imageSettings.maxHeight + 'px');
+                updateLivePreview();
+            });
+
+            $('#image-align').on('change', function() {
+                imageSettings.align = $(this).val();
+                updateLivePreview();
+            });
+
+            $('#image-margin').on('input', function() {
+                imageSettings.margin = parseInt($(this).val());
+                $('#image-margin-value').text(imageSettings.margin + 'px');
+                updateLivePreview();
+            });
+
+            // Dosya seç butonu
+            $('#btn-select-image').click(function() {
+                $('#image-file-input').click();
+            });
+
+            // Dosya seçildiğinde
+            $('#image-file-input').on('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    // Dosya boyutu kontrolü (5MB limit)
+                    const maxFileSize = 5 * 1024 * 1024; // 5MB
+                    if (file.size > maxFileSize) {
+                        alert('UYARI: Dosya çok büyük! (Maksimum: 5MB)\n\n' +
+                              'Seçilen dosya: ' + (file.size / 1024 / 1024).toFixed(2) + ' MB\n\n' +
+                              'Not: Büyük resimler localStorage kotasını aşabilir. Lütfen:\n' +
+                              '1. Resmi küçültün veya\n' +
+                              '2. Resmi bir sunucuya yükleyip URL kullanın');
+                        $(this).val(''); // Dosya seçimini temizle
+                        return;
+                    }
+                    
+                    // Dosyayı oku ve base64 data URL'e çevir
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const dataUrl = e.target.result;
+                        $('#page-image').val(dataUrl);
+                        $('#image-file-name').text(`Seçilen dosya: ${file.name} (${(file.size / 1024).toFixed(2)} KB)`).show();
+                        // Resim ayarları grubunu gizle (artık tam sayfa resim gösterimi kullanılıyor)
+                        $('#image-settings-group').hide();
+                        updateLivePreview();
+                        console.log('Resim yüklendi, imageUrl uzunluğu:', dataUrl.length);
+                        
+                        // Base64 resim uyarısı
+                        if (dataUrl.length > 500000) { // ~500KB
+                            alert('UYARI: Bu resim base64 formatında çok büyük!\n\n' +
+                                  'Kaydetme sırasında localStorage kotası aşılabilir.\n' +
+                                  'Öneri: Resmi bir sunucuya yükleyip URL kullanın.');
+                        }
+                    };
+                    reader.onerror = function() {
+                        alert('Dosya okunurken bir hata oluştu!');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            });
+
+            // Sayfa numarası değiştiğinde önizlemeyi güncelle
+            $('#page-number').on('input', function() {
+                updateLivePreview();
+            });
+
+            // Kelime sayacı fonksiyonu
+            function updateWordCount() {
+                const content = $('#page-content').val();
+                const text = content.replace(/<[^>]*>/g, ''); // HTML etiketlerini kaldır
+                const words = text.trim().split(/\s+/).filter(word => word.length > 0);
+                const wordCount = words.length;
+                $('#word-count').text(`Kelime sayısı: ${wordCount} (Hedef: ~225 kelime/sayfa)`);
+                
+                // Renk değiştir
+                const $wordCount = $('#word-count');
+                if (wordCount >= 200 && wordCount <= 225) {
+                    $wordCount.css('color', '#4ade80'); // Yeşil - ideal aralık
+                } else if (wordCount < 200) {
+                    $wordCount.css('color', '#fbbf24'); // Sarı - az
+                } else {
+                    $wordCount.css('color', '#f87171'); // Kırmızı - çok fazla (225'ten fazla)
+                }
+            }
+
+            // Sayfa seçici değiştiğinde
+            $('#page-select').on('change', function() {
+                const value = $(this).val();
+                if (value === 'new') {
+                    // Yeni sayfa için formu temizle
+                    $('#page-form')[0].reset();
+                    $('#page-select').val('new');
+                    updateLivePreview();
+                } else {
+                    // Mevcut sayfayı yükle
+                    loadPage(parseInt(value));
+                }
+            });
+
+            // Form submit
+            $('#page-form').on('submit', function(e) {
+                e.preventDefault();
+                savePage();
+            });
+
+            // Sil butonu
+            $('#btn-delete').on('click', function() {
+                const pageNum = parseInt($('#page-number').val());
+                if (pageNum && confirm('Bu sayfayı silmek istediğinize emin misiniz?')) {
+                    deletePage(pageNum);
+                }
+            });
+
+            // Bu sayfayı JSON olarak indir
+            $('#btn-export').on('click', function() {
+                const pageNum = parseInt($('#page-number').val());
+                const chapterTitle = $('#chapter-title').val().trim();
+                const content = $('#page-content').val().trim();
+                const imageUrl = $('#page-image').val().trim();
+
+                if (!pageNum || (!content && !imageUrl)) {
+                    alert('Önce sayfa numarası ve içerik veya resim girin!');
+                    return;
+                }
+
+                const pageData = {
+                    pageNumber: pageNum,
+                    chapterTitle: chapterTitle,
+                    content: content,
+                    imageUrl: imageUrl || null,
+                    pageSettings: {
+                        fontSize: pageSettings.fontSize,
+                        lineHeight: pageSettings.lineHeight,
+                        chapterSize: pageSettings.chapterSize,
+                        paddingSize: pageSettings.paddingSize
+                    },
+                    imageSettings: imageSettings
+                };
+
+                // JSON'u indir
+                const jsonString = JSON.stringify(pageData, null, 2);
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `sayfa${pageNum}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                alert(`Sayfa ${pageNum} JSON olarak indirildi!`);
+            });
+
+            // Tüm sayfaları ayrı ayrı indir
+            $('#btn-export-all').on('click', function() {
+                const data = getStoredData();
+                
+                if (!data.pages || data.pages.length === 0) {
+                    alert('İndirilecek sayfa yok!');
+                    return;
+                }
+
+                // Şu anki form verilerini de dahil et
+                const currentPageNum = parseInt($('#page-number').val());
+                const currentChapterTitle = $('#chapter-title').val().trim();
+                const currentContent = $('#page-content').val().trim();
+                const currentImageUrl = $('#page-image').val().trim();
+
+                if (currentPageNum && (currentContent || currentImageUrl)) {
+                    const existingIndex = data.pages.findIndex(p => p.pageNumber == currentPageNum);
+                    const pageData = {
+                        pageNumber: currentPageNum,
+                        chapterTitle: currentChapterTitle,
+                        content: currentContent,
+                        imageUrl: currentImageUrl || null,
+                        pageSettings: {
+                            fontSize: pageSettings.fontSize,
+                            lineHeight: pageSettings.lineHeight,
+                            chapterSize: pageSettings.chapterSize,
+                            paddingSize: pageSettings.paddingSize
+                        },
+                        imageSettings: imageSettings
+                    };
+
+                    if (existingIndex >= 0) {
+                        data.pages[existingIndex] = pageData;
+                    } else {
+                        data.pages.push(pageData);
+                    }
+                }
+
+                // Her sayfayı ayrı dosya olarak indir
+                data.pages.sort((a, b) => a.pageNumber - b.pageNumber);
+                
+                data.pages.forEach((page, index) => {
+                    setTimeout(() => {
+                        const jsonString = JSON.stringify(page, null, 2);
+                        const blob = new Blob([jsonString], { type: 'application/json' });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = `sayfa${page.pageNumber}.json`;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(url);
+                    }, index * 200); // Her dosya arasında 200ms bekle
+                });
+
+                setTimeout(() => {
+                    alert(`${data.pages.length} sayfa JSON olarak indirildi!`);
+                }, data.pages.length * 200);
+            });
+
+            // Canlı önizlemeyi güncelle
+            function updateLivePreview() {
+                const pageNum = $('#page-number').val();
+                const chapterTitle = $('#chapter-title').val().trim();
+                const content = $('#page-content').val().trim();
+                const imageUrl = $('#page-image').val().trim();
+
+                const $preview = $('#live-preview');
+                
+                if (!content && !chapterTitle && !imageUrl) {
+                    $preview.html('<div class="empty-preview">İçerik girmeye başladığınızda önizleme burada görünecektir...</div>');
+                    $preview.css('padding', '0');
+                    return;
+                }
+
+                // Önizleme alanına padding uygula (gerçek sayfa gibi)
+                $preview.css({
+                    'padding': pageSettings.paddingSize + 'px',
+                    'box-sizing': 'border-box'
+                });
+                
+                // Başlık var mı kontrol et (büyük harf efekti için)
+                const hasChapterTitle = chapterTitle && chapterTitle.trim();
+                const textPageClass = hasChapterTitle ? 'text-page has-chapter' : 'text-page';
+                
+                let previewHTML = `<div class="${textPageClass}" style="font-size: ${pageSettings.fontSize}rem; line-height: ${pageSettings.lineHeight}; width: 100%; height: 100%; box-sizing: border-box; overflow: hidden;">`;
+                
+                // Bölüm başlığı
+                if (chapterTitle) {
+                    const chapterParts = chapterTitle.split(' - ');
+                    let chapterNum = '';
+                    let chapterName = '';
+                    
+                    if (chapterParts.length > 1) {
+                        chapterNum = chapterParts[0].trim();
+                        chapterName = chapterParts.slice(1).join(' - ').trim();
+                    } else {
+                        chapterName = chapterTitle.trim();
+                    }
+                    
+                    previewHTML += '<div class="chapter-head">';
+                    if (chapterNum) {
+                        previewHTML += `<span class="chapter-num">${escapeHtml(chapterNum)}</span>`;
+                    }
+                    if (chapterName) {
+                        previewHTML += `<span class="chapter-name" style="font-size: ${pageSettings.chapterSize}rem; font-weight: bold;">${escapeHtml(chapterName)}</span>`;
+                    }
+                    previewHTML += '</div>';
+                }
+
+                // Resim (tam sayfa olarak göster)
+                if (imageUrl) {
+                    // Tam sayfa boyutunda göster
+                    previewHTML += `<div class="page-image-full"><img src="${imageUrl}" alt="Sayfa resmi" class="full-page-image" onerror="this.style.display='none'; console.error('Resim yüklenemedi');"></div>`;
+                }
+
+                // İçerik
+                if (content) {
+                    previewHTML += '<div class="text-body">';
+                    // HTML içeriği doğrudan ekle (güvenlik için basit bir escape yapıyoruz ama HTML'e izin veriyoruz)
+                    previewHTML += content;
+                    previewHTML += '</div>';
+                }
+
+                // Sayfa numarası
+                if (pageNum) {
+                    previewHTML += `<span class="page-footer">${escapeHtml(pageNum)}</span>`;
+                }
+
+                previewHTML += '</div>';
+                $preview.html(previewHTML);
+            }
+
+            // HTML escape (basit)
+            function escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            // Sayfa yükle
+            function loadPage(pageNum) {
+                const data = getStoredData();
+                const page = data.pages.find(p => p.pageNumber == pageNum);
+                
+                if (page) {
+                    $('#page-number').val(page.pageNumber);
+                    $('#chapter-title').val(page.chapterTitle || '');
+                    $('#page-image').val(page.imageUrl || '');
+                    $('#page-content').val(page.content || '');
+                    $('#page-select').val(pageNum);
+                    
+                    // Sayfa ayarlarını yükle (varsa)
+                    if (page.pageSettings) {
+                        pageSettings.fontSize = page.pageSettings.fontSize || 0.75;
+                        pageSettings.lineHeight = page.pageSettings.lineHeight || 1.4;
+                        pageSettings.chapterSize = page.pageSettings.chapterSize || 1.2;
+                        pageSettings.paddingSize = page.pageSettings.paddingSize || 40;
+                        
+                        // Slider değerlerini güncelle
+                        $('#font-size').val(pageSettings.fontSize);
+                        $('#line-height').val(pageSettings.lineHeight);
+                        $('#chapter-size').val(pageSettings.chapterSize);
+                        $('#padding-size').val(pageSettings.paddingSize);
+                        
+                        // Label değerlerini güncelle
+                        $('#font-size-value').text(pageSettings.fontSize + 'rem');
+                        $('#line-height-value').text(pageSettings.lineHeight);
+                        $('#chapter-size-value').text(pageSettings.chapterSize + 'rem');
+                        $('#padding-size-value').text(pageSettings.paddingSize + 'px');
+                    }
+                    
+                    updateWordCount();
+                    updateLivePreview();
+                }
+            }
+
+            // İlk kelime sayacını güncelle
+            updateWordCount();
+
+            // Sayfa kaydet
+            function savePage() {
+                const pageNum = parseInt($('#page-number').val());
+                const chapterTitle = $('#chapter-title').val().trim();
+                const content = $('#page-content').val().trim();
+                const imageUrl = $('#page-image').val().trim();
+
+                // Sayfa numarası kontrolü
+                if (!pageNum || pageNum < 1 || isNaN(pageNum)) {
+                    alert('Geçerli bir sayfa numarası girin!');
+                    $('#page-number').focus();
+                    return;
+                }
+
+                // İçerik veya resim kontrolü
+                if (!content && !imageUrl) {
+                    alert('Sayfa içeriği veya resim eklenmelidir!');
+                    return;
+                }
+
+                // Resim URL kontrolü (boş string değil, gerçekten bir değer var mı)
+                const finalImageUrl = imageUrl && imageUrl.length > 0 ? imageUrl : null;
+
+                let data = getStoredData();
+                
+                // Sayfa var mı kontrol et
+                const existingIndex = data.pages.findIndex(p => p.pageNumber == pageNum);
+                
+                const pageData = {
+                    pageNumber: pageNum,
+                    chapterTitle: chapterTitle || '',
+                    content: content || '',
+                    imageUrl: finalImageUrl,
+                    pageSettings: {
+                        fontSize: pageSettings.fontSize,
+                        lineHeight: pageSettings.lineHeight,
+                        chapterSize: pageSettings.chapterSize,
+                        paddingSize: pageSettings.paddingSize
+                    },
+                    imageSettings: imageSettings
+                };
+
+                if (existingIndex >= 0) {
+                    data.pages[existingIndex] = pageData;
+                } else {
+                    data.pages.push(pageData);
+                }
+
+                // Sayfa numarasına göre sırala
+                data.pages.sort((a, b) => a.pageNumber - b.pageNumber);
+
+                // Base64 resimleri tespit et ve temizle (localStorage kotası için)
+                let hasBase64Images = false;
+                data.pages.forEach(page => {
+                    if (page.imageUrl && page.imageUrl.startsWith('data:image')) {
+                        hasBase64Images = true;
+                        // Base64 resimleri localStorage'a kaydetme - sadece uyarı ver
+                        page.imageUrl = null; // Base64 resmi temizle
+                    }
+                });
+
+                // Veri boyutunu kontrol et
+                const dataString = JSON.stringify(data);
+                const dataSize = new Blob([dataString]).size;
+                const maxSize = 4 * 1024 * 1024; // 4MB (localStorage genelde 5-10MB, güvenli limit)
+
+                if (dataSize > maxSize) {
+                    alert('UYARI: Veri çok büyük! Bazı sayfaları silmeniz veya içerikleri kısaltmanız gerekebilir.\n\n' +
+                          'Mevcut boyut: ' + (dataSize / 1024 / 1024).toFixed(2) + ' MB\n' +
+                          'Önerilen limit: 4 MB\n\n' +
+                          'Not: Base64 formatındaki resimler otomatik olarak kaldırıldı. Lütfen resimler için URL kullanın.');
+                }
+
+                if (hasBase64Images) {
+                    const confirmSave = confirm('UYARI: Base64 formatındaki resimler localStorage\'a kaydedilemez (kota aşımı).\n\n' +
+                                              'Resimler temizlendi. Devam etmek istiyor musunuz?\n\n' +
+                                              'Not: Resimler için URL kullanmanız önerilir.');
+                    if (!confirmSave) {
+                        return; // Kullanıcı iptal etti
+                    }
+                }
+
+                try {
+                    localStorage.setItem(STORAGE_KEY, dataString);
+                    console.log('Sayfa kaydedildi:', pageData);
+                    console.log('Veri boyutu:', (dataSize / 1024).toFixed(2), 'KB');
+                    alert('Sayfa başarıyla kaydedildi!');
+                    loadPageSelector();
+                    $('#page-select').val(pageNum);
+                } catch (e) {
+                    console.error('Kaydetme hatası:', e);
+                    if (e.name === 'QuotaExceededError' || e.message.includes('quota')) {
+                        alert('HATA: localStorage kotası aşıldı!\n\n' +
+                              'Çözüm önerileri:\n' +
+                              '1. Bazı sayfaları silin\n' +
+                              '2. İçerikleri kısaltın\n' +
+                              '3. Base64 resimler yerine URL kullanın\n' +
+                              '4. Tüm sayfaları JSON olarak indirip localStorage\'ı temizleyin');
+                    } else {
+                        alert('Sayfa kaydedilirken bir hata oluştu! Hata: ' + e.message);
+                    }
+                }
+            }
+
+            // Sayfa sil
+            function deletePage(pageNum) {
+                let data = getStoredData();
+                data.pages = data.pages.filter(p => p.pageNumber != pageNum);
+                
+                try {
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                    loadPageSelector();
+                    
+                    // Formu temizle
+                    $('#page-form')[0].reset();
+                    $('#page-select').val('new');
+                    updateLivePreview();
+                    alert('Sayfa başarıyla silindi!');
+                } catch (e) {
+                    console.error('Silme hatası:', e);
+                    if (e.name === 'QuotaExceededError' || e.message.includes('quota')) {
+                        alert('HATA: localStorage kotası aşıldı! Lütfen tarayıcı ayarlarından localStorage\'ı temizleyin.');
+                    } else {
+                        alert('Sayfa silinirken bir hata oluştu! Hata: ' + e.message);
+                    }
+                }
+            }
+
+            // Sayfa seçiciyi yükle
+            function loadPageSelector() {
+                const data = getStoredData();
+                const $select = $('#page-select');
+                
+                // "Yeni Sayfa Ekle" seçeneğini koru
+                $select.html('<option value="new">+ Yeni Sayfa Ekle</option>');
+                
+                let maxPageNumber = 0;
+                
+                if (data.pages && data.pages.length > 0) {
+                    data.pages.sort((a, b) => a.pageNumber - b.pageNumber);
+                    data.pages.forEach(page => {
+                        const title = page.chapterTitle || `Sayfa ${page.pageNumber}`;
+                        $select.append(`<option value="${page.pageNumber}">Sayfa ${page.pageNumber} - ${title}</option>`);
+                        // En yüksek sayfa numarasını bul
+                        if (page.pageNumber > maxPageNumber) {
+                            maxPageNumber = page.pageNumber;
+                        }
+                    });
+                }
+                
+                // En son sayfa bilgisini güncelle
+                updateLastPageInfo(maxPageNumber);
+            }
+            
+            // En son sayfa bilgisini güncelle
+            function updateLastPageInfo(maxPageNumber) {
+                const $lastPageInfo = $('#last-page-info');
+                if (maxPageNumber > 0) {
+                    $lastPageInfo.text(`(Son: ${maxPageNumber})`);
+                } else {
+                    $lastPageInfo.text('(Henüz sayfa yok)');
+                }
+            }
+
+            // JSON İndir
+            function exportToJSON() {
+                const data = getStoredData();
+                
+                // Şu anki form verilerini de dahil et (kaydedilmemiş olsa bile)
+                const currentPageNum = parseInt($('#page-number').val());
+                const currentChapterTitle = $('#chapter-title').val().trim();
+                const currentContent = $('#page-content').val().trim();
+                const currentImageUrl = $('#page-image').val().trim();
+
+                if (currentPageNum && (currentContent || currentImageUrl)) {
+                    // Mevcut sayfayı güncelle veya ekle
+                    const existingIndex = data.pages.findIndex(p => p.pageNumber == currentPageNum);
+                    const pageData = {
+                        pageNumber: currentPageNum,
+                        chapterTitle: currentChapterTitle,
+                        content: currentContent,
+                        imageUrl: currentImageUrl || null,
+                        pageSettings: {
+                            fontSize: pageSettings.fontSize,
+                            lineHeight: pageSettings.lineHeight,
+                            chapterSize: pageSettings.chapterSize,
+                            paddingSize: pageSettings.paddingSize
+                        }
+                    };
+
+                    if (existingIndex >= 0) {
+                        data.pages[existingIndex] = pageData;
+                    } else {
+                        data.pages.push(pageData);
+                    }
+
+                    // Sırala
+                    data.pages.sort((a, b) => a.pageNumber - b.pageNumber);
+                }
+
+                // JSON'u indir
+                const jsonString = JSON.stringify(data, null, 2);
+                const blob = new Blob([jsonString], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'bookContent.json';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                alert('JSON dosyası indirildi!');
+            }
+
+            // localStorage'dan veri al
+            function getStoredData() {
+                const stored = localStorage.getItem(STORAGE_KEY);
+                if (stored) {
+                    return JSON.parse(stored);
+                }
+                return { pages: [] };
+            }
+
+            // localStorage temizle butonu
+            $('#btn-clear-storage').on('click', function() {
+                if (confirm('UYARI: Tüm kaydedilmiş sayfalar silinecek!\n\n' +
+                           'Önce tüm sayfaları JSON olarak indirmeniz önerilir.\n\n' +
+                           'Devam etmek istiyor musunuz?')) {
+                    localStorage.removeItem(STORAGE_KEY);
+                    alert('localStorage temizlendi! Sayfa yenileniyor...');
+                    location.reload();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

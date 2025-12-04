@@ -22,7 +22,8 @@ $(document).ready(function() {
     const libraryVideoFiles = [
         'Magical_Coffee_Library_Animation.mp4',
         'Generating_Burnt_Grounds_Cinematic_Shot.mp4',
-        'Fantasy_Coffee_World_Animation.mp4'
+        'Fantasy_Coffee_World_Animation.mp4',
+        'Endless_Magical_Coffee_Library_Animation.mp4'
     ];
 
     // Okuyucu arka plan görselleri (rastgele seçilecek) - Fantastik evrenlerden büyülü görseller

@@ -48,7 +48,59 @@
             overflow-x: auto;
             display: flex;
             flex-direction: column;
-            align-items: center; /* Önizlemeyi ortala */
+        }
+        
+        .preview-zoom-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+        
+        .preview-zoom-controls button {
+            width: 36px;
+            height: 36px;
+            background: rgba(197, 160, 89, 0.2);
+            border: 1px solid rgba(197, 160, 89, 0.4);
+            border-radius: 4px;
+            color: #c5a059;
+            font-size: 18px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .preview-zoom-controls button:hover {
+            background: rgba(197, 160, 89, 0.3);
+            border-color: #c5a059;
+            transform: scale(1.05);
+        }
+        
+        .preview-zoom-controls #btn-zoom-reset {
+            width: auto;
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            font-family: 'Cinzel', serif;
+        }
+        
+        #zoom-level {
+            min-width: 50px;
+            text-align: center;
+            color: #a89f91;
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+        }
+        
+        .preview-container {
+            overflow: auto;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
         }
 
         h1 {
@@ -184,9 +236,9 @@
             background-color: var(--paper-color);
             background-image: url("https://www.transparenttextures.com/patterns/paper.png");
             background-size: auto;
-            padding: 0; /* Padding dinamik olarak uygulanacak */
+            padding: 0; /* Padding page-content içinde uygulanacak */
             width: 425px; /* Tek sayfa genişliği (850px / 2 = 425px) */
-            height: 620px; /* Gerçek sayfa yüksekliği */
+            height: 620px; /* Gerçek sayfa yüksekliği (index.html ile aynı) */
             box-shadow: inset 0 0 20px rgba(0,0,0,0.05);
             position: relative;
             color: #2d2420;
@@ -194,13 +246,30 @@
             margin: 0 auto; /* Ortala */
             overflow: hidden; /* Taşmayı önle */
             box-sizing: border-box;
+            transition: transform 0.3s ease;
+        }
+        
+        /* Editördeki önizleme için page-content stilleri - index.html ile özdeş */
+        .live-preview .page-content {
+            width: 100%; 
+            height: 100%; 
+            box-sizing: border-box; 
+            overflow: hidden;
+            background-color: var(--paper-color);
+            background-image: url("https://www.transparenttextures.com/patterns/paper.png"); 
+            background-size: auto, auto;
         }
 
         .live-preview .text-page {
             color: #2d2420;
-            line-height: 1.5;
-            font-size: 0.9rem;
+            line-height: 1.4; /* index.html ile aynı (1.5 değil) */
+            font-size: 0.75rem; /* index.html ile aynı (0.9rem değil) */
             text-align: justify;
+            position: relative; /* Sayfa numarası için */
+            height: 100%;
+            width: 100%;
+            box-sizing: border-box;
+            overflow: hidden; /* index.html ile aynı */
         }
 
         .live-preview .chapter-head {
@@ -219,15 +288,12 @@
         .live-preview .chapter-name {
             display: block;
             font-family: var(--font-cinzel);
-            font-size: 1.4rem;
+            font-size: 1.2rem; /* index.html ile aynı (1.4rem değil) */
             font-weight: bold;
             color: #4a3b32;
             margin-top: 3px;
         }
 
-        .live-preview .text-body {
-            margin-bottom: 20px;
-        }
 
         .live-preview .text-body p {
             margin-bottom: 1rem;
@@ -250,7 +316,7 @@
 
         .live-preview .page-footer {
             position: absolute;
-            bottom: 20px;
+            bottom: 20px; /* index.html ile aynı */
             left: 0;
             width: 100%;
             text-align: center;
@@ -512,12 +578,24 @@
 
         <!-- Sağ Panel: Canlı Önizleme -->
         <div class="preview-panel">
-            <h2>Canlı Önizleme</h2>
-            <p class="subtitle">Yazdığınız içerik burada gerçek zamanlı olarak görünecektir</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <div>
+                    <h2 style="margin: 0;">Canlı Önizleme</h2>
+                    <p class="subtitle" style="margin: 5px 0 0 0;">Yazdığınız içerik burada gerçek zamanlı olarak görünecektir</p>
+                </div>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <button id="btn-zoom-out" style="width: 36px; height: 36px; background: rgba(197, 160, 89, 0.2); border: 1px solid rgba(197, 160, 89, 0.4); border-radius: 4px; color: #c5a059; font-size: 18px; cursor: pointer; font-weight: bold; transition: all 0.3s;">−</button>
+                    <span id="zoom-level" style="min-width: 50px; text-align: center; color: #a89f91; font-family: 'Cinzel', serif; font-size: 0.9rem;">80%</span>
+                    <button id="btn-zoom-in" style="width: 36px; height: 36px; background: rgba(197, 160, 89, 0.2); border: 1px solid rgba(197, 160, 89, 0.4); border-radius: 4px; color: #c5a059; font-size: 18px; cursor: pointer; font-weight: bold; transition: all 0.3s;">+</button>
+                    <button id="btn-zoom-reset" style="padding: 8px 12px; background: rgba(197, 160, 89, 0.15); border: 1px solid rgba(197, 160, 89, 0.3); border-radius: 4px; color: #c5a059; font-family: 'Cinzel', serif; font-size: 0.8rem; cursor: pointer; transition: all 0.3s;">Sıfırla</button>
+                </div>
+            </div>
             
-            <div class="live-preview" id="live-preview">
-                <div class="empty-preview">
-                    İçerik girmeye başladığınızda önizleme burada görünecektir...
+            <div class="preview-container">
+                <div class="live-preview" id="live-preview">
+                    <div class="empty-preview">
+                        İçerik girmeye başladığınızda önizleme burada görünecektir...
+                    </div>
                 </div>
             </div>
         </div>
@@ -566,8 +644,15 @@
                 fontSize: 0.75,
                 lineHeight: 1.4,
                 chapterSize: 1.2,
-                paddingSize: 40
+                paddingSize: 40,
+                letterSpacing: 0 // Karakter aralığı (px)
             };
+
+            // Zoom ayarları
+            let zoomLevel = 80; // Yüzde olarak (başlangıç %80)
+            const MIN_ZOOM = 50;
+            const MAX_ZOOM = 200;
+            const ZOOM_STEP = 10;
 
             // Resim ayarları için varsayılan değerler
             let imageSettings = {
@@ -763,7 +848,8 @@
                         fontSize: pageSettings.fontSize,
                         lineHeight: pageSettings.lineHeight,
                         chapterSize: pageSettings.chapterSize,
-                        paddingSize: pageSettings.paddingSize
+                        paddingSize: pageSettings.paddingSize,
+                        letterSpacing: pageSettings.letterSpacing || 0
                     },
                     imageSettings: imageSettings
                 };
@@ -859,9 +945,9 @@
                     return;
                 }
 
-                // Önizleme alanına padding uygula (gerçek sayfa gibi)
+                // Önizleme alanına padding uygulama (artık page-content içinde uygulanacak)
                 $preview.css({
-                    'padding': pageSettings.paddingSize + 'px',
+                    'padding': '0',
                     'box-sizing': 'border-box'
                 });
                 
@@ -869,7 +955,12 @@
                 const hasChapterTitle = chapterTitle && chapterTitle.trim();
                 const textPageClass = hasChapterTitle ? 'text-page has-chapter' : 'text-page';
                 
-                let previewHTML = `<div class="${textPageClass}" style="font-size: ${pageSettings.fontSize}rem; line-height: ${pageSettings.lineHeight}; width: 100%; height: 100%; box-sizing: border-box; overflow: hidden;">`;
+                // page-content div'i ekle (index.html ile aynı yapı)
+                const contentStyle = `padding: ${pageSettings.paddingSize}px !important; width: 100%; height: 100%; box-sizing: border-box;`;
+                const letterSpacingStyle = pageSettings.letterSpacing !== 0 ? `letter-spacing: ${pageSettings.letterSpacing}px;` : '';
+                const pageStyle = `font-size: ${pageSettings.fontSize}rem; line-height: ${pageSettings.lineHeight}; ${letterSpacingStyle} width: 100%; height: 100%; box-sizing: border-box; overflow: hidden;`;
+                
+                let previewHTML = `<div class="page-content" style="${contentStyle}"><div class="${textPageClass}" style="${pageStyle}">`;
                 
                 // Bölüm başlığı
                 if (chapterTitle) {
@@ -913,7 +1004,7 @@
                     previewHTML += `<span class="page-footer">${escapeHtml(pageNum)}</span>`;
                 }
 
-                previewHTML += '</div>';
+                previewHTML += '</div></div>';
                 $preview.html(previewHTML);
             }
 
@@ -942,6 +1033,7 @@
                         pageSettings.lineHeight = page.pageSettings.lineHeight || 1.4;
                         pageSettings.chapterSize = page.pageSettings.chapterSize || 1.2;
                         pageSettings.paddingSize = page.pageSettings.paddingSize || 40;
+                        pageSettings.letterSpacing = page.pageSettings.letterSpacing || 0;
                         
                         // Slider değerlerini güncelle
                         $('#font-size').val(pageSettings.fontSize);
@@ -1001,7 +1093,8 @@
                         fontSize: pageSettings.fontSize,
                         lineHeight: pageSettings.lineHeight,
                         chapterSize: pageSettings.chapterSize,
-                        paddingSize: pageSettings.paddingSize
+                        paddingSize: pageSettings.paddingSize,
+                        letterSpacing: pageSettings.letterSpacing || 0
                     },
                     imageSettings: imageSettings
                 };
@@ -1198,6 +1291,291 @@
                     location.reload();
                 }
             });
+
+            // Sayfaya Sığdır butonu
+            $('#btn-fit-to-page').on('click', function() {
+                fitTextToPage();
+            });
+
+            // Zoom fonksiyonu
+            function updateZoom() {
+                const $preview = $('#live-preview');
+                const scale = zoomLevel / 100;
+                $preview.css({
+                    'transform': `scale(${scale})`,
+                    'transform-origin': 'top center',
+                    'margin-bottom': scale > 1 ? `${(scale - 1) * 620}px` : '0'
+                });
+                $('#zoom-level').text(zoomLevel + '%');
+            }
+
+            // Sayfa yüklendiğinde zoom'u uygula
+            updateZoom();
+
+            // Sayfa yüklendiğinde zoom'u uygula
+            updateZoom();
+
+            // Metni sayfaya sığdırma fonksiyonu (Profesyonel Mizanpaj Kontrolü)
+            function fitTextToPage() {
+                const content = $('#page-content').val().trim();
+                const chapterTitle = $('#chapter-title').val().trim();
+                
+                if (!content && !chapterTitle) {
+                    alert('Önce sayfa içeriği girin!');
+                    return;
+                }
+
+                // Sayfa boyutları
+                const PAGE_WIDTH = 425; // Tek sayfa genişliği (px)
+                const PAGE_HEIGHT = 620; // Sayfa yüksekliği (px)
+                const PADDING = pageSettings.paddingSize; // Padding (px)
+                const FOOTER_HEIGHT = 40; // Sayfa numarası için alan (px)
+                
+                // HAY: Hedef Alan Yüksekliği
+                const HAY = PAGE_HEIGHT - (PADDING * 2) - FOOTER_HEIGHT;
+                
+                // Hedef Minimum Alt Boşluk (%15)
+                const TARGET_MIN_BOTTOM_MARGIN = PADDING * 0.15;
+                
+                // Kullanılabilir genişlik
+                const availableWidth = PAGE_WIDTH - (PADDING * 2);
+
+                // Başlangıç değerleri (Profesyonel standartlar)
+                // BP: Başlangıç Punto = 10.5pt ≈ 0.875rem (1pt = 0.0833rem)
+                const BP_PT = 10.5;
+                const BP_REM = BP_PT * 0.0833; // ≈ 0.875rem
+                
+                // BSA: Başlangıç Satır Aralığı = 12.5pt ≈ 1.2 × BP
+                const BSA_PT = 12.5;
+                const BSA_RATIO = BSA_PT / BP_PT; // ≈ 1.19
+                
+                let currentFontSize = BP_REM; // rem cinsinden
+                let currentLineHeight = BSA_RATIO; // oran olarak
+                let currentLetterSpacing = 0; // px cinsinden (Tracking)
+
+                // Okunabilirlik sınırları
+                const MIN_FONT_SIZE_PT = 10.0; // Minimum punto
+                const MIN_FONT_SIZE_REM = MIN_FONT_SIZE_PT * 0.0833; // ≈ 0.833rem
+                const MIN_LINE_HEIGHT_RATIO = 1.15; // 1.15 × Punto
+                const MIN_LETTER_SPACING = -10; // px (Tracking minimum)
+
+                // Geçici ölçüm elementi
+                const $measureDiv = $('<div>').css({
+                    position: 'absolute',
+                    visibility: 'hidden',
+                    width: availableWidth + 'px',
+                    fontSize: currentFontSize + 'rem',
+                    lineHeight: currentLineHeight,
+                    letterSpacing: currentLetterSpacing + 'px',
+                    fontFamily: 'var(--font-eb)',
+                    textAlign: 'justify',
+                    padding: '0',
+                    margin: '0',
+                    whiteSpace: 'normal',
+                    wordWrap: 'break-word'
+                });
+
+                // Bölüm başlığı yüksekliği
+                let chapterHeight = 0;
+                if (chapterTitle) {
+                    const $chapterDiv = $('<div>').css({
+                        position: 'absolute',
+                        visibility: 'hidden',
+                        fontSize: pageSettings.chapterSize + 'rem',
+                        fontFamily: 'var(--font-cinzel)',
+                        textAlign: 'center',
+                        width: availableWidth + 'px',
+                        marginBottom: '15px',
+                        marginTop: '5px'
+                    }).text(chapterTitle);
+                    $('body').append($chapterDiv);
+                    chapterHeight = $chapterDiv.outerHeight(true);
+                    $chapterDiv.remove();
+                }
+
+                // İçerik ölçümü
+                const $contentDiv = $('<div>').html(content).css({
+                    fontSize: currentFontSize + 'rem',
+                    lineHeight: currentLineHeight,
+                    letterSpacing: currentLetterSpacing + 'px',
+                    fontFamily: 'var(--font-eb)',
+                    textAlign: 'justify'
+                });
+                $measureDiv.append($contentDiv);
+                $('body').append($measureDiv);
+
+                let contentHeight = $measureDiv.outerHeight(true);
+                let totalHeight = chapterHeight + contentHeight;
+
+                // ADIM 1: Kaba Yerleştirme ve Kontrol
+                let iterations = 0;
+                const MAX_ITERATIONS = 200;
+                let needsOptimization = totalHeight > HAY;
+
+                // ADIM 2: İnce Ayar (Taşmayı Giderme)
+                if (needsOptimization) {
+                    while (totalHeight > HAY && iterations < MAX_ITERATIONS) {
+                        iterations++;
+                        let madeProgress = false;
+
+                        // Öncelik 1: Satır Aralığı Optimizasyonu (0.05pt adımlarla)
+                        const currentFontSizePt = currentFontSize / 0.0833; // rem'den pt'ye çevir
+                        const minLineHeightRatio = 1.15; // 1.15 × Punto
+                        const currentLineHeightPt = currentFontSizePt * currentLineHeight;
+                        const minLineHeightPt = currentFontSizePt * minLineHeightRatio;
+                        
+                        if (currentLineHeightPt > minLineHeightPt) {
+                            // 0.05pt azalt (rem cinsinden: 0.05pt / currentFontSizePt)
+                            const stepRem = (0.05 / currentFontSizePt);
+                            const newLineHeight = Math.max(minLineHeightRatio, currentLineHeight - stepRem);
+                            
+                            if (newLineHeight < currentLineHeight) {
+                                currentLineHeight = newLineHeight;
+                                $measureDiv.css('lineHeight', currentLineHeight);
+                                $contentDiv.css('lineHeight', currentLineHeight);
+                                contentHeight = $measureDiv.outerHeight(true);
+                                totalHeight = chapterHeight + contentHeight;
+                                madeProgress = true;
+                                
+                                if (totalHeight <= HAY) break;
+                            }
+                        }
+
+                        // Öncelik 2: Karakter Aralığı Optimizasyonu (Tracking: -3 birim)
+                        if (currentLetterSpacing > MIN_LETTER_SPACING && totalHeight > HAY) {
+                            currentLetterSpacing = Math.max(MIN_LETTER_SPACING, currentLetterSpacing - 3);
+                            $measureDiv.css('letterSpacing', currentLetterSpacing + 'px');
+                            $contentDiv.css('letterSpacing', currentLetterSpacing + 'px');
+                            contentHeight = $measureDiv.outerHeight(true);
+                            totalHeight = chapterHeight + contentHeight;
+                            madeProgress = true;
+                            
+                            if (totalHeight <= HAY) break;
+                        }
+
+                        // Öncelik 3: Punto Optimizasyonu (Son Çare: 0.05pt adımlarla)
+                        if (currentFontSize > MIN_FONT_SIZE_REM && totalHeight > HAY) {
+                            const stepRem = 0.05 * 0.0833; // 0.05pt = ~0.004rem
+                            currentFontSize = Math.max(MIN_FONT_SIZE_REM, currentFontSize - stepRem);
+                            $measureDiv.css('fontSize', currentFontSize + 'rem');
+                            $contentDiv.css('fontSize', currentFontSize + 'rem');
+                            contentHeight = $measureDiv.outerHeight(true);
+                            totalHeight = chapterHeight + contentHeight;
+                            madeProgress = true;
+                            
+                            if (totalHeight <= HAY) break;
+                        }
+
+                        // İlerleme yoksa dur
+                        if (!madeProgress) break;
+                    }
+                }
+
+                // Ölçüm elementini temizle
+                $measureDiv.remove();
+
+                // ADIM 3: Onay ve Dengeleme
+                if (totalHeight <= HAY) {
+                    let remainingSpace = HAY - totalHeight;
+                    let finalFontSize = currentFontSize;
+                    let finalLineHeight = currentLineHeight;
+                    let finalLetterSpacing = currentLetterSpacing;
+
+                    // Dengeleme: Eğer çok fazla boşluk varsa, okunaklığı artır
+                    if (remainingSpace > TARGET_MIN_BOTTOM_MARGIN * 1.5) {
+                        // BSA ve Tracking'i 0.01 birim artırarak boşluğu azalt
+                        const balanceIterations = Math.min(50, Math.floor((remainingSpace - TARGET_MIN_BOTTOM_MARGIN) / 5));
+                        
+                        for (let i = 0; i < balanceIterations; i++) {
+                            // Satır aralığını artır
+                            const currentFontSizePt = finalFontSize / 0.0833;
+                            const stepRem = (0.01 / currentFontSizePt);
+                            finalLineHeight += stepRem;
+                            
+                            // Tracking'i artır (daha az negatif yap)
+                            if (finalLetterSpacing < 0) {
+                                finalLetterSpacing = Math.min(0, finalLetterSpacing + 0.01);
+                            }
+                            
+                            // Yeniden ölç
+                            const $balanceDiv = $('<div>').css({
+                                position: 'absolute',
+                                visibility: 'hidden',
+                                width: availableWidth + 'px',
+                                fontSize: finalFontSize + 'rem',
+                                lineHeight: finalLineHeight,
+                                letterSpacing: finalLetterSpacing + 'px',
+                                fontFamily: 'var(--font-eb)',
+                                textAlign: 'justify'
+                            });
+                            const $balanceContent = $('<div>').html(content).css({
+                                fontSize: finalFontSize + 'rem',
+                                lineHeight: finalLineHeight,
+                                letterSpacing: finalLetterSpacing + 'px',
+                                fontFamily: 'var(--font-eb)',
+                                textAlign: 'justify'
+                            });
+                            $balanceDiv.append($balanceContent);
+                            $('body').append($balanceDiv);
+                            
+                            const newContentHeight = $balanceDiv.outerHeight(true);
+                            const newTotalHeight = chapterHeight + newContentHeight;
+                            $balanceDiv.remove();
+                            
+                            if (newTotalHeight > HAY) {
+                                // Geri al
+                                finalLineHeight -= stepRem;
+                                if (finalLetterSpacing < 0) {
+                                    finalLetterSpacing = Math.max(MIN_LETTER_SPACING, finalLetterSpacing - 0.01);
+                                }
+                                break;
+                            }
+                            
+                            remainingSpace = HAY - newTotalHeight;
+                            if (remainingSpace <= TARGET_MIN_BOTTOM_MARGIN * 1.2) break;
+                        }
+                    }
+
+                    // Değerleri güncelle
+                    pageSettings.fontSize = parseFloat(finalFontSize.toFixed(3));
+                    pageSettings.lineHeight = parseFloat(finalLineHeight.toFixed(3));
+                    pageSettings.letterSpacing = Math.round(finalLetterSpacing * 100) / 100;
+                    
+                    // Slider değerlerini güncelle
+                    $('#font-size').val(pageSettings.fontSize);
+                    $('#line-height').val(pageSettings.lineHeight);
+                    
+                    // Label değerlerini güncelle
+                    $('#font-size-value').text(pageSettings.fontSize + 'rem');
+                    $('#line-height-value').text(pageSettings.lineHeight.toFixed(3));
+
+                    // Önizlemeyi güncelle
+                    updateLivePreview();
+
+                    // Sonuç mesajı
+                    const fontSizePt = (pageSettings.fontSize / 0.0833).toFixed(1);
+                    const lineHeightPt = (fontSizePt * pageSettings.lineHeight).toFixed(1);
+                    const message = `✅ Metin sayfaya sığdırıldı!\n\n` +
+                                  `📏 Font Boyutu: ${pageSettings.fontSize}rem (${fontSizePt}pt)\n` +
+                                  `📏 Satır Aralığı: ${pageSettings.lineHeight.toFixed(3)} (${lineHeightPt}pt)\n` +
+                                  (finalLetterSpacing !== 0 ? `📏 Karakter Aralığı: ${finalLetterSpacing.toFixed(2)}px\n` : '') +
+                                  `\n📐 Kalan Boşluk: ${remainingSpace.toFixed(1)}px\n` +
+                                  `📐 Hedef Boşluk: ${TARGET_MIN_BOTTOM_MARGIN.toFixed(1)}px`;
+
+                    if (Math.abs(remainingSpace - TARGET_MIN_BOTTOM_MARGIN) <= TARGET_MIN_BOTTOM_MARGIN * 0.3) {
+                        alert(message + '\n\n✅ Estetik boşluk hedefe uygun! Mizanpaj ONAYLANDI.');
+                    } else if (remainingSpace < TARGET_MIN_BOTTOM_MARGIN) {
+                        alert(message + '\n\n⚠️ Boşluk hedeften az, ancak metin sığdı.');
+                    } else {
+                        alert(message + '\n\n💡 Boşluk hedeften fazla, ancak okunaklılık korundu.');
+                    }
+                } else {
+                    alert('❌ UYARI: Metin minimum değerlerle bile sayfaya sığmadı.\n\n' +
+                          'Lütfen içeriği kısaltın veya sayfa sayısını artırın.\n\n' +
+                          `Mevcut yükseklik: ${totalHeight.toFixed(1)}px\n` +
+                          `Hedef yükseklik: ${HAY.toFixed(1)}px`);
+                }
+            }
         });
     </script>
 </body>

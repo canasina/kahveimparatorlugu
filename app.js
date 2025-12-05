@@ -170,9 +170,9 @@ $(document).ready(function() {
         
         // Sayfa ayarlarını al (varsa, yoksa varsayılan değerler)
         const settings = page.pageSettings || {
-            fontSize: 0.8,
+            fontSize: 0.75,
             lineHeight: 1.4,
-            chapterSize: 1.1   ,
+            chapterSize: 1.2,
             paddingSize: 40
         };
         
@@ -222,7 +222,8 @@ $(document).ready(function() {
         const textPageClass = hasChapterTitle ? 'text-page has-chapter' : 'text-page';
 
         // Sayfa ayarlarını style olarak uygula
-        const pageStyle = `font-size: ${settings.fontSize}rem; line-height: ${settings.lineHeight}; width: 100%; height: 100%; box-sizing: border-box; overflow: hidden;`;
+        const letterSpacingStyle = settings.letterSpacing && settings.letterSpacing !== 0 ? `letter-spacing: ${settings.letterSpacing}px;` : '';
+        const pageStyle = `font-size: ${settings.fontSize}rem; line-height: ${settings.lineHeight}; ${letterSpacingStyle} width: 100%; height: 100%; box-sizing: border-box; overflow: hidden;`;
         const contentStyle = `padding: ${settings.paddingSize}px !important; width: 100%; height: 100%; box-sizing: border-box;`;
 
         return `

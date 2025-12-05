@@ -554,6 +554,67 @@ body {
     margin-bottom: 0.8rem;
 }
 
+/* Metin içi görseller */
+.text-body img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: 1.5rem auto;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    opacity: 0;
+    animation: fadeInImage 0.8s ease-in-out forwards;
+}
+
+@keyframes fadeInImage {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.text-body img.inline-left {
+    float: left;
+    margin: 0 1rem 1rem 0;
+    max-width: 40%;
+}
+
+.text-body img.inline-right {
+    float: right;
+    margin: 0 0 1rem 1rem;
+    max-width: 40%;
+}
+
+.text-body img.inline-center {
+    display: block;
+    margin: 1.5rem auto;
+    max-width: 80%;
+}
+
+/* Tam sayfa görseli - albüm fotoğrafı stili (hafif çapraz) */
+.text-body img.full-page-image {
+    width: calc(100% - 20px);
+    max-width: calc(100% - 20px);
+    height: auto;
+    max-height: calc(100vh - 200px);
+    object-fit: contain;
+    margin: 1.5rem auto;
+    padding: 10px;
+    box-sizing: border-box;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: rotate(-1.5deg);
+    transition: transform 0.3s ease;
+}
+
+.text-body img.full-page-image:hover {
+    transform: rotate(-1.5deg) scale(1.02);
+}
+
 .page-footer {
     position: absolute; bottom: 20px; left: 0; width: 100%;
     text-align: center; font-family: var(--font-cinzel); color: #888;
